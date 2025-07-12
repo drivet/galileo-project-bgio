@@ -1,0 +1,29 @@
+{
+  "name": "Tic Tac Toe Implementation ",
+  "version": "1.0.0",
+  "description": "Tic Tac Toe Implementation",
+  "scripts": {
+    "start": "parcel index.html --open",
+    "build": "parcel build index.html",
+    "serve": "npx ts-node src/server.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "boardgame.io": "^0.50.2",
+    "ts-jest": "^29.3.2",
+    "vue": "^3.5.17"
+  },
+  "devDependencies": {
+    "@parcel/transformer-vue": "^2.15.4",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "parcel": "^2.15.4",
+    "process": "^0.11.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "typescript",
+    "web"
+  ]
+}
