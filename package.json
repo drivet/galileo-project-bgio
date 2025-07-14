@@ -1,7 +1,7 @@
 {
-  "name": "Tic Tac Toe Implementation ",
+  "name": "Galileo Project Implementation ",
   "version": "1.0.0",
-  "description": "Tic Tac Toe Implementation",
+  "description": "Galileo Project Implementation",
   "scripts": {
     "start": "parcel index.html --open",
     "build": "parcel build index.html",
@@ -9,7 +9,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "@types/lodash": "^4.17.20",
     "boardgame.io": "^0.50.2",
+    "lodash": "^4.17.21",
     "ts-jest": "^29.3.2",
     "vue": "^3.5.17"
   },

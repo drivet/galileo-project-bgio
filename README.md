@@ -1,4 +1,4 @@
-# Boardgame.io Template
+# Galileo Project Implementation
 
 This templates implements the Tic Tac Toe tutorial on 
 [boardgame.io](https://boardgame.io/), but with the following changes:

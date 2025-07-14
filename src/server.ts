@@ -1,8 +1,8 @@
 import { Server, Origins } from 'boardgame.io/server';
-import { TicTacToe } from './game/game';
+import { GalileoProjectGame } from './game/game';
 
 const server = Server({
-  games: [TicTacToe],
+  games: [GalileoProjectGame],
   origins: [Origins.LOCALHOST],
 });
 
