@@ -1,24 +1,14 @@
-import { Ctx, PlayerID } from "boardgame.io";
+import { Ctx, PlayerID } from 'boardgame.io';
 
-const moons = [
-  'Io',
-  'Europa',
-  'Ganymede',
-  'Callisto',
-] as const;
+export const moons = ['Io', 'Europa', 'Ganymede', 'Callisto'] as const;
 
-export type Moon = typeof moons[number];
+export type Moon = (typeof moons)[number];
 
 export type Track = 'Mars' | 'Earth';
 
-const robotTypes = [
-  'Miner',
-  'Builder',
-  'StarZ',
-  'Technician',
-] as const;
+export const robotTypes = ['Miner', 'Builder', 'StarZ', 'Technician'] as const;
 
-export type RobotType = typeof robotTypes[number];
+export type RobotType = (typeof robotTypes)[number];
 
 export interface RobotCard {
   type: RobotType;
@@ -29,7 +19,7 @@ export interface RobotCard {
   initialLevel: number;
 }
 
-const characterIds = [
+export const characterIds = [
   'MsChau',
   'MnDiatExpi',
   'MnMilutinMadic',
@@ -40,12 +30,12 @@ const characterIds = [
   'MnIlaZoe',
   'MartySimon',
   'MsLee',
-  "Nakkia",
-  "MnLeonardSimon"
+  'Nakkia',
+  'MnLeonardSimon',
 ] as const;
 
-export type CharacterId = typeof characterIds[number];
-export type CharacterMarker = "4" | "3+";
+export type CharacterId = (typeof characterIds)[number];
+export type CharacterMarker = '4' | '3+';
 
 export interface CharacterCard {
   name: CharacterId;
@@ -55,21 +45,21 @@ export interface CharacterCard {
   marker?: CharacterMarker;
 }
 
-const technologies = [
+export const technologies = [
   'AutomatedDrilling',
   'EarthMarsHighway',
 
   'CryptoExchange',
   'AiClone',
-  
+
   'Superconductivity',
   'AutomatedAssembly',
-  
+
   'RoboticSequencing',
-  'MemoryScanner'
+  'MemoryScanner',
 ] as const;
 
-export type TechId = typeof technologies[number];
+export type TechId = (typeof technologies)[number];
 
 export interface TechnologyCard {
   sideA: TechId;
@@ -96,10 +86,10 @@ export const allGoals = [
   'Develop4Technologies',
   'Reach6OnEachMoon',
   'Have4ModifiedRobots',
-  'Control7RobotsSamecColor'
+  'Control7RobotsSamecColor',
 ] as const;
 
-export type GoalId = typeof allGoals[number];
+export type GoalId = (typeof allGoals)[number];
 
 export interface Player {
   playerID: PlayerID;
@@ -109,7 +99,7 @@ export interface Player {
   megacredits: number;
   energy: number;
   goalMarkers: number;
-  moons:  { [moon in Moon]: number; }
+  moons: { [moon in Moon]: number };
 
   // 4 moon assignments, 4 robot modifier
   // Maybe don't need these as we can figure things out
@@ -134,7 +124,7 @@ export interface GalileoProjectGameState {
 
   // used at the start of the game to give people resources
   // take one, blank out the index
-  initialResources: (RoboticProjectCard|null)[];
+  initialResources: (RoboticProjectCard | null)[];
 
   players: { [key: string]: Player };
 
@@ -145,5 +135,7 @@ export interface GalileoProjectGameState {
   starZASide: boolean;
 }
 
-export type GalileoProjectFnCtx = { G: GalileoProjectGameState, ctx: Ctx };
-export type GalileoProjectMoveCtx = GalileoProjectFnCtx & { playerID: PlayerID };
+export type GalileoProjectFnCtx = { G: GalileoProjectGameState; ctx: Ctx };
+export type GalileoProjectMoveCtx = GalileoProjectFnCtx & {
+  playerID: PlayerID;
+};

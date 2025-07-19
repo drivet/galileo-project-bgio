@@ -1,0 +1,15 @@
+*.sh
+.DS_Store
+.dockerignore
+.editorconfig
+.gitignore
+.huskyrc
+.idea
+.lintstagedrc
+.prettierignore
+Dockerfile
+Dockerfile-compose
+Jenkinsfile
+dist/
+node_modules/
+src/generated/
