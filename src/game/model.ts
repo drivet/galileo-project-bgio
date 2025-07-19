@@ -1,4 +1,4 @@
-import { PlayerID } from "boardgame.io";
+import { Ctx, PlayerID } from "boardgame.io";
 
 const moons = [
   'Io',
@@ -116,6 +116,8 @@ export interface Player {
   // from the state of project cards
   moonAssignemnts: Moon[];
   robotModifiers: RobotType[];
+
+  roboticProjects: RoboticProjectCard[];
 }
 
 export interface GoalTracker {
@@ -130,6 +132,10 @@ export interface GalileoProjectGameState {
     roboticProjectCards: RoboticProjectCard[];
   };
 
+  // used at the start of the game to give people resources
+  // take one, blank out the index
+  initialResources: (RoboticProjectCard|null)[];
+
   players: { [key: string]: Player };
 
   robotsForSale: RobotCard[];
@@ -138,3 +144,6 @@ export interface GalileoProjectGameState {
   goals: GoalTracker[];
   starZASide: boolean;
 }
+
+export type GalileoProjectFnCtx = { G: GalileoProjectGameState, ctx: Ctx };
+export type GalileoProjectMoveCtx = GalileoProjectFnCtx & { playerID: PlayerID };

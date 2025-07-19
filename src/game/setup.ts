@@ -2,7 +2,7 @@ import { Ctx } from "boardgame.io";
 import { allGoals, CharacterCard, CharacterId, CharacterMarker, GalileoProjectGameState, 
   GoalTracker, 
   Moon, Player, RobotCard, RoboticProjectCard, RobotType, TechId, Track } from "./model";
-import { shuffle, takeTopN } from "./utils";
+import { randInt, shuffle, takeTopN } from "./utils";
 import _ from "lodash";
 
 function makeRobotCard(type: RobotType, track: Track, baseCost: number,
@@ -149,10 +149,10 @@ const projectCards: RoboticProjectCard[] = [
 ];
 
 function setupTechnologies(ctx: Ctx, random: any): TechId[][] {
-  const tech1: TechId = Math.floor(random.Number() * 2) === 0 ? "AutomatedDrilling" : "EarthMarsHighway";
-  const tech2: TechId = Math.floor(random.Number() * 2) === 0 ? "CryptoExchange" : "AiClone";
-  const tech3: TechId = Math.floor(random.Number() * 2) === 0 ? "Superconductivity" : "AutomatedAssembly";
-  const tech4: TechId = Math.floor(random.Number() * 2) === 0 ? "RoboticSequencing" : "MemoryScanner";
+  const tech1: TechId = randInt(random, 2) === 0 ? "AutomatedDrilling" : "EarthMarsHighway";
+  const tech2: TechId = randInt(random, 2) === 0 ? "CryptoExchange" : "AiClone";
+  const tech3: TechId = randInt(random, 2) === 0 ? "Superconductivity" : "AutomatedAssembly";
+  const tech4: TechId = randInt(random, 2) === 0 ? "RoboticSequencing" : "MemoryScanner";
   
   if (ctx.numPlayers === 4) {
     return [
@@ -184,7 +184,8 @@ function initPlayers(ctx: Ctx): Player[] {
     // maybe do not need these
     moonAssignemnts: ["Callisto", "Europa", "Ganymede", "Io"],
     robotModifiers: ["Builder", "Miner", "StarZ", "Technician"],
-    
+
+    roboticProjects: [],
     moons: {
       "Callisto": 0,
       "Europa" : 0,
@@ -211,7 +212,9 @@ export function setup(ctx: Ctx, random: any): GalileoProjectGameState {
   const technologies = setupTechnologies(ctx, random);
 
   const goals = takeTopN(shuffle(random, allGoals), 4).map(goal => ({ goal, players: [] } as GoalTracker ));
-  const starZASide = Math.floor(random.Number() * 2) === 0
+  const starZASide = randInt(random, 2) === 0;
+
+  const initialResources = takeTopN(shuffledProjectCards, ctx.numPlayers + 1);
 
   return {
     robotsForSale,
@@ -219,6 +222,8 @@ export function setup(ctx: Ctx, random: any): GalileoProjectGameState {
     technologies,
     goals,
     starZASide,
+
+    initialResources,
 
     players : _.keyBy(initPlayers(ctx), p => p.playerID),
    
