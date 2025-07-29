@@ -17,5 +17,11 @@ export const GalileoProjectGame: Game<GalileoProjectGameState> = {
 
   moves: {},
 
+  turn: {
+    stages: {
+
+    }
+  },
+
   endIf: ({ _G, _ctx }) => {},
 };

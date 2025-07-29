@@ -1,8 +1,9 @@
 import { PlayerID } from 'boardgame.io';
 import { INVALID_MOVE } from 'boardgame.io/core';
 
-import { ChooseInitialResources } from './init-resources';
+import { ChooseInitialResources, EndIf, OnEnd } from './init-resources';
 import {
+  GalileoProjectFnCtx,
   GalileoProjectGameState,
   GalileoProjectMoveCtx,
   Player,
@@ -13,9 +14,9 @@ function makeRoboticProjectCard(
   influence: number,
   megacredits: number,
   energy: number,
-  initialLevel: number,
-) {
-  return { influence, megacredits, energy, initialLevel };
+  level: number,
+): RoboticProjectCard {
+  return { influence, megacredits, energy, level, levelModified: false };
 }
 
 function makePlayer(playerID: PlayerID): Player {
@@ -32,24 +33,26 @@ function makePlayer(playerID: PlayerID): Player {
     moonAssignemnts: ['Callisto', 'Europa', 'Ganymede', 'Io'],
     robotModifiers: ['Builder', 'Miner', 'StarZ', 'Technician'],
 
-    roboticProjects: [],
     moons: {
-      Callisto: 0,
-      Europa: 0,
-      Ganymede: 0,
-      Io: 0,
+      Callisto: [],
+      Europa: [],
+      Ganymede: [],
+      Io: [],
     },
   };
 }
 
 it('should fail to choose a resource', () => {
   const G = {
-    initialResources: [] as RoboticProjectCard[],
+    initialResources: [
+      makeRoboticProjectCard(3, 1, 2, 2),
+      makeRoboticProjectCard(4, 2, 1, 1),
+    ] as RoboticProjectCard[],
   } as GalileoProjectGameState;
 
   const moveCtx = { G, playerID: '0' } as GalileoProjectMoveCtx;
 
-  expect(ChooseInitialResources(moveCtx, 0)).toBe(INVALID_MOVE);
+  expect(ChooseInitialResources(moveCtx, 2)).toBe(INVALID_MOVE);
 });
 
 it('should choose a resource', () => {
@@ -67,4 +70,68 @@ it('should choose a resource', () => {
   ChooseInitialResources(moveCtx, 1);
   expect(G.players[playerID].energy).toBe(1);
   expect(G.players[playerID].megacredits).toBe(2);
+});
+
+it('should end phase if one card left', () => {
+ const G = {
+    initialResources: [
+      makeRoboticProjectCard(3, 1, 2, 2),
+    ] as RoboticProjectCard[],
+  } as GalileoProjectGameState;
+
+  const fnCtx = { G } as GalileoProjectFnCtx;
+  expect(EndIf(fnCtx)).toBe(true);
+});
+
+it('should not end phase if more than one card left', () => {
+ const G = {
+    initialResources: [
+      makeRoboticProjectCard(3, 1, 2, 2),
+      makeRoboticProjectCard(4, 2, 1, 1),
+    ] as RoboticProjectCard[],
+  } as GalileoProjectGameState;
+
+  const fnCtx = { G } as GalileoProjectFnCtx;
+  expect(EndIf(fnCtx)).toBe(false);
+});
+
+it('should end phase by putting card back', () => {
+ const G = {
+    initialResources: [
+      makeRoboticProjectCard(3, 1, 2, 2),
+    ] as RoboticProjectCard[],
+    secret: {
+      roboticProjectCards: [
+        makeRoboticProjectCard(4, 2, 1, 1)
+      ] as RoboticProjectCard[],
+    },
+  } as GalileoProjectGameState;
+
+  const fnCtx = { G } as GalileoProjectFnCtx;
+  OnEnd(fnCtx);
+  expect(G.initialResources.length).toBe(0);
+  expect(G.secret.roboticProjectCards.length).toBe(2);
+  expect(G.secret.roboticProjectCards[0]).toEqual(makeRoboticProjectCard(3, 1, 2, 2));
+});
+
+it('should throw error if ending incorrectly (more than 1 card left)', () => {
+ const G = {
+    initialResources: [
+      makeRoboticProjectCard(3, 1, 2, 2),
+      makeRoboticProjectCard(4, 2, 1, 1)
+    ] as RoboticProjectCard[],
+  } as GalileoProjectGameState;
+
+  const fnCtx = { G } as GalileoProjectFnCtx;
+  expect(() => OnEnd(fnCtx)).toThrow();
+});
+
+it('should throw error if ending incorrectly (no cards left)', () => {
+ const G = {
+    initialResources: [
+    ] as RoboticProjectCard[],
+  } as GalileoProjectGameState;
+
+  const fnCtx = { G } as GalileoProjectFnCtx;
+  expect(() => OnEnd(fnCtx)).toThrow();
 });

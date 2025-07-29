@@ -1,4 +1,4 @@
-import { Ctx, PlayerID } from 'boardgame.io';
+import { FnContext, PlayerID } from 'boardgame.io';
 
 export const moons = ['Io', 'Europa', 'Ganymede', 'Callisto'] as const;
 
@@ -10,13 +10,49 @@ export const robotTypes = ['Miner', 'Builder', 'StarZ', 'Technician'] as const;
 
 export type RobotType = (typeof robotTypes)[number];
 
+export interface RobotInPlay {
+  type: RobotType;
+  typeModified: boolean;
+  
+  moon1: Moon;
+  moon2: Moon | null;  
+  
+  level: number;
+  baseLevel: number;
+}
+
 export interface RobotCard {
   type: RobotType;
+  // true if the type is from a modifier; can't have more than one
+  typeModified: boolean;
+
+  baseLevel: number;
+  level: number;
+
   track: Track;
   baseCost: number;
   moon1: Moon;
   moon2: Moon | null;
-  initialLevel: number;
+}
+
+export interface RoboticProjectCard {
+  // initial resources given to player
+  influence: number;
+  megacredits: number;
+  energy: number;
+
+  baseLevel: number;
+  level: number;
+
+  // from modifiers
+  type?: RobotType;
+  moon1?: Moon;
+  moon2?: Moon;
+}
+
+export interface RobotLevel {
+  baseLevel: number;
+  level: number;
 }
 
 export const characterIds = [
@@ -41,7 +77,7 @@ export interface CharacterCard {
   name: CharacterId;
   baseInfluence: number;
   megacredits: number;
-  topTrack: Track;
+  immediateTrack: Track;
   marker?: CharacterMarker;
 }
 
@@ -61,21 +97,16 @@ export const technologies = [
 
 export type TechId = (typeof technologies)[number];
 
-export interface TechnologyCard {
-  sideA: TechId;
-  sideB: TechId;
+export interface TechnologySide {
+  energy: number;
+  megacredits: number;
+  vp: number;
+  techId: TechId;
 }
 
-export interface RoboticProjectCard {
-  influence: number;
-  megacredits: number;
-  energy: number;
-  initialLevel: number;
-
-  // needed to fill this out
-  type?: RobotType;
-  moon1?: Moon;
-  moon2?: Moon;
+export interface TechnologyCard {
+  sideA: TechnologySide;
+  sideB: TechnologySide;
 }
 
 export const allGoals = [
@@ -99,15 +130,17 @@ export interface Player {
   megacredits: number;
   energy: number;
   goalMarkers: number;
-  moons: { [moon in Moon]: number };
+  moons: { [moon in Moon]: (RobotInPlay)[] };
 
-  // 4 moon assignments, 4 robot modifier
-  // Maybe don't need these as we can figure things out
-  // from the state of project cards
+  // 4 (initial) moon assignments, 4 (initial) robot modifier
   moonAssignemnts: Moon[];
   robotModifiers: RobotType[];
 
-  roboticProjects: RoboticProjectCard[];
+  roboticProject?: RoboticProjectCard;
+
+  technologies: TechnologySide[];
+  usedAutomtaedDrilling?: boolean;
+  usedEarthMarsHighWay?: boolean;
 }
 
 export interface GoalTracker {
@@ -115,10 +148,26 @@ export interface GoalTracker {
   players: PlayerID[];
 }
 
+export type CharacterAbility = 'Immediate' | 'EndOfGame';
+
+export interface HireCharacterCtx {
+  characterToHire: CharacterCard;
+  ability: CharacterAbility[];
+}
+
+export interface AcquireRobotState {
+
+}
+
+export interface DevelopTechState {
+
+}
+
 export interface GalileoProjectGameState {
   secret: {
     robotDeck: RobotCard[];
     characterDeck: CharacterCard[];
+    discardedCharacters: CharacterCard[];
     roboticProjectCards: RoboticProjectCard[];
   };
 
@@ -130,12 +179,24 @@ export interface GalileoProjectGameState {
 
   robotsForSale: RobotCard[];
   charactersForHire: CharacterCard[];
-  technologies: TechId[][];
+  technologies: TechnologySide[][];
   goals: GoalTracker[];
   starZASide: boolean;
+
+  // not sure if I really need to keep track of these...
+  energy: number;
+  megacredits: number;
+  levels_1_2: number;
+  levels_3_4: number;
+  levels_5_6: number;
+  levels_7: number;
+
+  hireCharacterCtx?: HireCharacterCtx; 
 }
 
-export type GalileoProjectFnCtx = { G: GalileoProjectGameState; ctx: Ctx };
+export type GalileoProjectFnCtx = FnContext<GalileoProjectGameState>;
 export type GalileoProjectMoveCtx = GalileoProjectFnCtx & {
   playerID: PlayerID;
 };
+
+export type EventsAPI = GalileoProjectFnCtx['events'];

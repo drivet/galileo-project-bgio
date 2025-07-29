@@ -14,6 +14,7 @@ import {
   RoboticProjectCard,
   RobotType,
   TechId,
+  TechnologySide,
   Track,
 } from './model';
 import { randInt, shuffle, takeTopN } from './utils';
@@ -24,9 +25,9 @@ function makeRobotCard(
   baseCost: number,
   moon1: Moon,
   moon2: Moon | null,
-  initialLevel: number,
+  level: number,
 ): RobotCard {
-  return { type, track, baseCost, moon1, moon2, initialLevel };
+  return { type, typeModified: false, track, baseCost, moon1, moon2, level, baseLevel: level };
 }
 
 const robotCards: RobotCard[] = [
@@ -90,7 +91,7 @@ function makeCharacterCard(
   topTrack: Track,
   marker?: CharacterMarker,
 ): CharacterCard {
-  return { name, baseInfluence, megacredits, topTrack, marker };
+  return { name, baseInfluence, megacredits, immediateTrack: topTrack, marker };
 }
 
 const characterCards: CharacterCard[] = [
@@ -159,9 +160,9 @@ function makeRoboticProjectCard(
   influence: number,
   megacredits: number,
   energy: number,
-  initialLevel: number,
-) {
-  return { influence, megacredits, energy, initialLevel };
+  level: number,
+): RoboticProjectCard {
+  return { influence, megacredits, energy, level, baseLevel: level };
 }
 const projectCards: RoboticProjectCard[] = [
   makeRoboticProjectCard(5, 1, 0, 2),
@@ -176,11 +177,68 @@ const projectCards: RoboticProjectCard[] = [
   makeRoboticProjectCard(3, 3, 0, 2),
 ];
 
-function setupTechnologies(ctx: Ctx, random: unknown): TechId[][] {
-  const tech1: TechId = randInt(random, 2) === 0 ? 'AutomatedDrilling' : 'EarthMarsHighway';
-  const tech2: TechId = randInt(random, 2) === 0 ? 'CryptoExchange' : 'AiClone';
-  const tech3: TechId = randInt(random, 2) === 0 ? 'Superconductivity' : 'AutomatedAssembly';
-  const tech4: TechId = randInt(random, 2) === 0 ? 'RoboticSequencing' : 'MemoryScanner';
+function setupTechnologies(ctx: Ctx, random: unknown): TechnologySide[][] {
+  const technologies: TechnologySide[] = [
+    {
+      energy: 1,
+      megacredits: 1,
+      vp: 1,
+      techId: 'AutomatedDrilling'
+    },
+    {
+      energy: 1,
+      megacredits: 1,
+      vp: 2,
+      techId: 'EarthMarsHighway'
+    },
+    {
+      energy: 3,
+      vp: 3,
+      megacredits: 0,
+      techId: 'CryptoExchange'
+    },
+    {
+      energy: 2,
+      megacredits: 2,
+      vp: 2,
+      techId: 'AiClone'
+    },
+    {
+      energy: 1,
+      megacredits: 1,
+      vp: 1,
+      techId: 'AutomatedDrilling'
+    },
+    {
+      energy: 3,
+      megacredits: 1,
+      vp: 1,
+      techId: 'Superconductivity'
+    },
+    {
+      energy: 2,
+      megacredits: 2,
+      vp: 2,
+      techId: 'AutomatedAssembly'
+    },
+    {
+      energy: 2,
+      megacredits: 3,
+      vp: 1,
+      techId: 'RoboticSequencing'
+    },
+    {
+      energy: 3,
+      megacredits: 1,
+      vp: 1,
+      techId: 'MemoryScanner'
+    }
+  ]
+
+  const tech1: TechnologySide = randInt(random, 2) === 0 ? technologies[0] : technologies[1];
+  const tech2: TechnologySide = randInt(random, 2) === 0 ? technologies[2] : technologies[3];
+  const tech3: TechnologySide = randInt(random, 2) === 0 ? technologies[4] : technologies[5];
+  const tech4: TechnologySide = randInt(random, 2) === 0 ? technologies[6] : technologies[7];
 
   if (ctx.numPlayers === 4) {
     return [
@@ -213,13 +271,13 @@ function initPlayers(ctx: Ctx): Player[] {
     moonAssignemnts: ['Callisto', 'Europa', 'Ganymede', 'Io'],
     robotModifiers: ['Builder', 'Miner', 'StarZ', 'Technician'],
 
-    roboticProjects: [],
     moons: {
-      Callisto: 0,
-      Europa: 0,
-      Ganymede: 0,
-      Io: 0,
+      Callisto: [],
+      Europa: [],
+      Ganymede: [],
+      Io: [],
     },
+    technologies: [] as TechnologySide[]
   }));
 }
 
@@ -261,7 +319,15 @@ export function setup(ctx: Ctx, random: unknown): GalileoProjectGameState {
     secret: {
       robotDeck: shuffledRobotCards,
       characterDeck: shuffledCharacterCards,
+      discardedCharacters: [],
       roboticProjectCards: shuffledProjectCards,
     },
+
+    energy: 20,
+    megacredits: 24,
+    levels_1_2: 10,
+    levels_3_4: 21,
+    levels_5_6: 16,
+    levels_7: 3,
   };
 }
