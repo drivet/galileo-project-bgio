@@ -10,6 +10,7 @@ import {
   GoalTracker,
   Moon,
   Player,
+  RandomAPI,
   RobotCard,
   RoboticProjectCard,
   RobotType,
@@ -177,7 +178,7 @@ const projectCards: RoboticProjectCard[] = [
   makeRoboticProjectCard(3, 3, 0, 2),
 ];
 
-function setupTechnologies(ctx: Ctx, random: unknown): TechnologySide[][] {
+function setupTechnologies(numPlayers: number, random: RandomAPI): TechnologySide[][] {
   const technologies: TechnologySide[] = [
     {
       energy: 1,
@@ -240,7 +241,7 @@ function setupTechnologies(ctx: Ctx, random: unknown): TechnologySide[][] {
   const tech3: TechnologySide = randInt(random, 2) === 0 ? technologies[4] : technologies[5];
   const tech4: TechnologySide = randInt(random, 2) === 0 ? technologies[6] : technologies[7];
 
-  if (ctx.numPlayers === 4) {
+  if (numPlayers === 4) {
     return [
       [tech1, tech1, tech1],
       [tech2, tech2, tech2],
@@ -257,8 +258,8 @@ function setupTechnologies(ctx: Ctx, random: unknown): TechnologySide[][] {
   }
 }
 
-function initPlayers(ctx: Ctx): Player[] {
-  return ctx.playOrder.map((p) => ({
+function initPlayers(playerIDs: string[]): Player[] {
+  return playerIDs.map((p) => ({
     playerID: p,
     track: null,
     influence: 0,
@@ -281,29 +282,30 @@ function initPlayers(ctx: Ctx): Player[] {
   }));
 }
 
-export function setup(ctx: Ctx, random: unknown): GalileoProjectGameState {
-  const shuffledRobotCards = shuffle(random, robotCards);
-  const usedCharacterCards = characterCards.filter(
+export function setup(playerIDs: string[], random: RandomAPI): GalileoProjectGameState {
+  const numPlayers = playerIDs.length;
+  const shuffledRobotCards = shuffle(random, [...robotCards]);
+  const usedCharacterCards = [...characterCards].filter(
     (c) =>
       !c.marker ||
-      (c.marker === '3+' && ctx.numPlayers >= 3) ||
-      (c.marker === '4' && ctx.numPlayers === 4),
+      (c.marker === '3+' && numPlayers >= 3) ||
+      (c.marker === '4' && numPlayers === 4),
   );
   const shuffledCharacterCards = shuffle(random, usedCharacterCards);
 
-  const shuffledProjectCards = shuffle(random, projectCards);
+  const shuffledProjectCards = shuffle(random, [...projectCards]);
 
   const robotsForSale = takeTopN(shuffledRobotCards, 5);
   const charactersForHire = takeTopN(shuffledCharacterCards, 5);
 
-  const technologies = setupTechnologies(ctx, random);
+  const technologies = setupTechnologies(numPlayers, random);
 
-  const goals = takeTopN(shuffle(random, allGoals), 4).map(
+  const goals = takeTopN(shuffle(random, [...allGoals]), 4).map(
     (goal) => ({ goal, players: [] }) as GoalTracker,
   );
   const starZASide = randInt(random, 2) === 0;
 
-  const initialResources = takeTopN(shuffledProjectCards, ctx.numPlayers + 1);
+  const initialResources = takeTopN(shuffledProjectCards, numPlayers + 1);
 
   return {
     robotsForSale,
@@ -314,7 +316,7 @@ export function setup(ctx: Ctx, random: unknown): GalileoProjectGameState {
 
     initialResources,
 
-    players: _.keyBy(initPlayers(ctx), (p) => p.playerID),
+    players: _.keyBy(initPlayers(playerIDs), (p) => p.playerID),
 
     secret: {
       robotDeck: shuffledRobotCards,
@@ -329,5 +331,7 @@ export function setup(ctx: Ctx, random: unknown): GalileoProjectGameState {
     levels_3_4: 21,
     levels_5_6: 16,
     levels_7: 3,
+
+    actionCtx: [],
   };
 }

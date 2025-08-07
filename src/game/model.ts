@@ -19,6 +19,7 @@ export interface RobotInPlay {
   
   level: number;
   baseLevel: number;
+  track?: Track;
 }
 
 export interface RobotCard {
@@ -141,7 +142,10 @@ export interface Player {
   technologies: TechnologySide[];
   usedAutomtaedDrilling?: boolean;
   usedEarthMarsHighWay?: boolean;
+
+  pick4Robots?: RobotCard[];
 }
+
 
 export interface GoalTracker {
   goal: GoalId;
@@ -150,18 +154,37 @@ export interface GoalTracker {
 
 export type CharacterAbility = 'Immediate' | 'EndOfGame';
 
-export interface HireCharacterCtx {
-  characterToHire: CharacterCard;
-  ability: CharacterAbility[];
+
+/**
+ * This is set the the current character being "processed".  
+ * The character could have been
+ * - hired
+ * - chosen among the first X for a Builder resolution
+ * - the first character from a Star Z A side resolution
+ * 
+ * Being processed means you are resolving their immediate effect,
+ * or you need to move it to your character roster.
+ */
+export interface CharacterCtx {
+  kind: 'characterToUse'
+  character: CharacterCard;
 }
 
-export interface AcquireRobotState {
-
+/**
+ * Use this when you need to resolve a robot ability before placing
+ * the robot on the moon.
+ */
+export interface AcquireRobotCtx {
+  kind: 'robotToPlace';
+  robotToPlace: RobotInPlay;
 }
 
-export interface DevelopTechState {
-
+export interface DevelopTechCtx {
+  kind: 'techToKeep';
+  techToKeep: TechnologySide;
 }
+
+export type ActionCtx = CharacterCtx | AcquireRobotCtx | DevelopTechCtx;
 
 export interface GalileoProjectGameState {
   secret: {
@@ -177,8 +200,8 @@ export interface GalileoProjectGameState {
 
   players: { [key: string]: Player };
 
-  robotsForSale: RobotCard[];
-  charactersForHire: CharacterCard[];
+  robotsForSale: (RobotCard | null)[];
+  charactersForHire: (CharacterCard | null)[];
   technologies: TechnologySide[][];
   goals: GoalTracker[];
   starZASide: boolean;
@@ -191,7 +214,7 @@ export interface GalileoProjectGameState {
   levels_5_6: number;
   levels_7: number;
 
-  hireCharacterCtx?: HireCharacterCtx; 
+  actionCtx: ActionCtx[];
 }
 
 export type GalileoProjectFnCtx = FnContext<GalileoProjectGameState>;
@@ -200,3 +223,19 @@ export type GalileoProjectMoveCtx = GalileoProjectFnCtx & {
 };
 
 export type EventsAPI = GalileoProjectFnCtx['events'];
+export interface RandomAPI {
+    D4(): number;
+    D4(diceCount: number): number[];
+    D6(): number;
+    D6(diceCount: number): number[];
+    D10(): number;
+    D10(diceCount: number): number[];
+    D12(): number;
+    D12(diceCount: number): number[];
+    D20(): number;
+    D20(diceCount: number): number[];
+    Die(spotvalue?: number): number;
+    Die(spotvalue: number, diceCount: number): number[];
+    Number(): number;
+    Shuffle<T>(deck: T[]): T[];
+}

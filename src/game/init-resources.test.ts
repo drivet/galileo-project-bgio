@@ -16,7 +16,7 @@ function makeRoboticProjectCard(
   energy: number,
   level: number,
 ): RoboticProjectCard {
-  return { influence, megacredits, energy, level, levelModified: false };
+  return { influence, megacredits, energy, level, baseLevel: level };
 }
 
 function makePlayer(playerID: PlayerID): Player {
@@ -39,6 +39,7 @@ function makePlayer(playerID: PlayerID): Player {
       Ganymede: [],
       Io: [],
     },
+    technologies: []
   };
 }
 

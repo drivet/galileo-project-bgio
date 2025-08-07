@@ -7,6 +7,10 @@ export function takeTop<T>(items: T[]): T {
   return (items.splice(0, 1))[0];
 }
 
+export function peek<T>(items: T[]): T {
+  return items[items.length-1];
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function shuffle<T>(random: any, deck: readonly T[] | T[]): T[] {
   return random.Shuffle(deck as unknown[] as T[]);
