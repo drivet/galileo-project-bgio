@@ -1,5 +1,5 @@
 import { gainCredits, gainInfluence, payCredits, payEnergy } from "./game-utils";
-import { DevelopTechCtx, GalileoProjectGameState, Player } from "./model";
+import { KeepTechCtx, GalileoProjectGameState, Player } from "./model";
 import { peek } from "./utils";
 
 export const ENERGY_DISCOUNT = 1;
@@ -45,7 +45,7 @@ export function keepTech(G: GalileoProjectGameState, player: Player): boolean {
   if (!action || action.kind !== 'techToKeep') {
     return false;
   }
-  const tech = (G.actionCtx.pop() as DevelopTechCtx).techToKeep;
+  const tech = (G.actionCtx.pop() as KeepTechCtx).techToKeep;
   player.technologies.push(tech);
   return true;
 }

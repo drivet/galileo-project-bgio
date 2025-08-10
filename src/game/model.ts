@@ -10,25 +10,15 @@ export const robotTypes = ['Miner', 'Builder', 'StarZ', 'Technician'] as const;
 
 export type RobotType = (typeof robotTypes)[number];
 
-export interface RobotInPlay {
-  type: RobotType;
-  typeModified: boolean;
-  
-  moon1: Moon;
-  moon2: Moon | null;  
-  
-  level: number;
+export interface RobotLevel {
   baseLevel: number;
-  track?: Track;
+  level: number;
 }
 
-export interface RobotCard {
+export interface RobotCard extends RobotLevel  {
   type: RobotType;
   // true if the type is from a modifier; can't have more than one
   typeModified: boolean;
-
-  baseLevel: number;
-  level: number;
 
   track: Track;
   baseCost: number;
@@ -36,14 +26,12 @@ export interface RobotCard {
   moon2: Moon | null;
 }
 
-export interface RoboticProjectCard {
-  // initial resources given to player
+export interface RoboticProjectCard extends RobotLevel {
+  // Initial resources given to player
+  // Could be used to recognize a project versus a robot
   influence: number;
   megacredits: number;
   energy: number;
-
-  baseLevel: number;
-  level: number;
 
   // from modifiers
   type?: RobotType;
@@ -51,9 +39,14 @@ export interface RoboticProjectCard {
   moon2?: Moon;
 }
 
-export interface RobotLevel {
-  baseLevel: number;
-  level: number;
+export interface RobotInPlay extends RobotLevel {
+  type: RobotType;
+  typeModified: boolean;
+  
+  moon1: Moon;
+  moon2: Moon | null;  
+  
+  track?: Track;
 }
 
 export const characterIds = [
@@ -143,6 +136,7 @@ export interface Player {
   usedAutomtaedDrilling?: boolean;
   usedEarthMarsHighWay?: boolean;
 
+  // used during robitic sequencing
   pick4Robots?: RobotCard[];
 }
 
@@ -152,39 +146,33 @@ export interface GoalTracker {
   players: PlayerID[];
 }
 
-export type CharacterAbility = 'Immediate' | 'EndOfGame';
+export type CharacterAbility = 'Immediate' | 'EndOfGame' | 'Both';
 
-
-/**
- * This is set the the current character being "processed".  
- * The character could have been
- * - hired
- * - chosen among the first X for a Builder resolution
- * - the first character from a Star Z A side resolution
- * 
- * Being processed means you are resolving their immediate effect,
- * or you need to move it to your character roster.
- */
-export interface CharacterCtx {
-  kind: 'characterToUse'
+export interface DiscardCharacterCtx {
+  kind: 'discardCharacter'
   character: CharacterCard;
 }
 
-/**
- * Use this when you need to resolve a robot ability before placing
- * the robot on the moon.
- */
-export interface AcquireRobotCtx {
+export interface KeepCharacterCtx {
+  kind: 'keepCharacter'
+  character: CharacterCard;
+}
+
+export interface PlaceRobotCtx {
   kind: 'robotToPlace';
   robotToPlace: RobotInPlay;
 }
 
-export interface DevelopTechCtx {
+export interface KeepTechCtx {
   kind: 'techToKeep';
   techToKeep: TechnologySide;
 }
 
-export type ActionCtx = CharacterCtx | AcquireRobotCtx | DevelopTechCtx;
+export interface PlaceModifierCtx {
+  kind: 'placeModifier';
+}
+
+export type ActionCtx = DiscardCharacterCtx | KeepCharacterCtx | PlaceRobotCtx | KeepTechCtx | PlaceModifierCtx;
 
 export interface GalileoProjectGameState {
   secret: {

@@ -282,7 +282,7 @@ function initPlayers(playerIDs: string[]): Player[] {
   }));
 }
 
-export function setup(playerIDs: string[], random: RandomAPI): GalileoProjectGameState {
+export function setupGame(playerIDs: string[], random: RandomAPI): GalileoProjectGameState {
   const numPlayers = playerIDs.length;
   const shuffledRobotCards = shuffle(random, [...robotCards]);
   const usedCharacterCards = [...characterCards].filter(

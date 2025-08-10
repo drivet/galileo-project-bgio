@@ -1,7 +1,21 @@
 
-import { gainInfluence, gainCredits, countRobots, moonLevel } from "./game-utils";
-import { CharacterCard, CharacterCtx, GalileoProjectGameState, Player, Track } from "./model";
+import { gainInfluence, gainCredits, countRobots, moonLevel, otherTrack } from "./game-utils";
+import { CharacterAbility, CharacterCard, DiscardCharacterCtx, GalileoProjectGameState, KeepCharacterCtx, Player, Track } from "./model";
 import { peek } from "./utils";
+
+function pushCharacterCtx(G: GalileoProjectGameState, ability: CharacterAbility, card: CharacterCard) {
+  if (ability === 'Immediate') {
+    G.actionCtx.push({
+      kind: 'discardCharacter',
+      character: card,
+    });
+  } else {
+     G.actionCtx.push({
+      kind: 'keepCharacter',
+      character: card,
+    });
+  }
+}
 
 /**
  * One of the basic actions of the game
@@ -9,58 +23,61 @@ import { peek } from "./utils";
  * @param G 
  * @param player 
  * @param index 
- * @param ability 
- * @param track 
+ * @param ability This is only a choice on certain Ganeymede spaces, otherwise it's determined by your track, or it's always both
+ * @param track This is only a choice if you're on the 0 space.
  * @returns 
  */
-export function hireCharacter(G: GalileoProjectGameState, player: Player, index: number, track?: Track): boolean {
-  if (!validateHire(player, index, track)) {
-    return false;
-  }
-
+export function hireCharacter(G: GalileoProjectGameState, player: Player, index: number, ability: CharacterAbility, track: Track): boolean {
   const card = G.charactersForHire[index];
   if (!card) {
     return false;
   }
+
+  if (!validateHire(player, card, ability, track)) {
+    return false;
+  }
+
+  if (player.influence === 0) {
+    player.track = track;
+  }
+
   gainInfluence(G, player, adjustCharacterInfluence(card, index));
   gainCredits(G, player, card.megacredits);
 
-  G.actionCtx.push({
-    kind: 'characterToUse',
-    character: card,
-  });  
+  pushCharacterCtx(G, ability, card);
   return true;
 }
 
 
-export function resolveBuilderAbility(G: GalileoProjectGameState, player: Player, index: number) {
+export function resolveBuilderAbility(G: GalileoProjectGameState, player: Player, index: number, ability: CharacterAbility) {
   const total = countRobots(player, 'Builder') + 1;
   if (index >= total || index < 0 || index > 4) {
     return false;
   }
 
+  if (ability === 'Both') {
+    return false;
+  }
+
   const character = G.charactersForHire[index];
   if (!character) {
     return false;
   }
   G.charactersForHire[index] = null;
-  G.actionCtx.push({
-    kind: 'characterToUse',
-    character,
-  });  
+  pushCharacterCtx(G, ability, character);
 }
 
-export function resolveStarZA3(G: GalileoProjectGameState) {
+export function resolveStarZA3(G: GalileoProjectGameState, ability: CharacterAbility) {
   const index = 0;
   const character = G.charactersForHire[index];
   if (!character) {
     return false;
   }
+  if (ability === 'Both') {
+    return false;
+  }
   G.charactersForHire[index] = null;
-  G.actionCtx.push({
-    kind: 'characterToUse',
-    character,
-  });  
+  pushCharacterCtx(G, ability, character);
 }
 
 export function resolveStarZB3(G: GalileoProjectGameState, player: Player) {
@@ -86,7 +103,7 @@ export function resolveStarZB3(G: GalileoProjectGameState, player: Player) {
  */
 export function keepCharacter(G: GalileoProjectGameState, player: Player, characterToFire?: CharacterCard): boolean {
   const action = peek(G.actionCtx);
-  if (!action || action.kind !== 'characterToUse') {
+  if (!action || action.kind !== 'keepCharacter') {
     return false;
   }
   
@@ -101,17 +118,17 @@ export function keepCharacter(G: GalileoProjectGameState, player: Player, charac
     player.characters.splice(index, 1);
     G.secret.discardedCharacters.unshift(characterToFire);
   }
-  const character = (G.actionCtx.pop() as CharacterCtx).character;
+  const character = (G.actionCtx.pop() as KeepCharacterCtx).character;
   player.characters.push(character); 
   return true;
 }
 
 export function discardCharacter(G: GalileoProjectGameState): boolean {
   const action = peek(G.actionCtx);
-  if (!action || action.kind !== 'characterToUse') {
+  if (!action || action.kind !== 'discardCharacter') {
     return false;
   }
-  const character = (G.actionCtx.pop() as CharacterCtx).character;
+  const character = (G.actionCtx.pop() as DiscardCharacterCtx).character;
   G.secret.discardedCharacters.push(character);
   return true;
 }
@@ -128,23 +145,30 @@ function adjustCharacterInfluence(card: CharacterCard, index: number): number {
   }
 }
 
-function validateHire(player: Player, index: number, track?: Track): boolean {
-  if (index < 0 || index > 4) {
-    return false;
-  }
-
-  if (player.influence === 0 && !track) {
-    // you need to specify a track to get the influence on if you have 0 
-    // (i.e. you're not on a track)
+function validateHire(player: Player, card: CharacterCard, ability: CharacterAbility, track: Track): boolean {
+  if (player.influence > 0 && player.track !== track) {
+    // track has to match, but only if you actually have influence
     return false;
   }
   
-  if (player.influence > 0 && track && player.track !== track) {
-    // normally you wouldn't supply a track if you're on a track,
-    // but if you do they have to match
+  const ganymedeLevel = moonLevel(player, "Ganymede");
+  if (ganymedeLevel < 4) {
+    // at this level, the ability must match your track, and you can't do both
+    if (ability === 'Both') {
+      return false;
+    } else if (ability === 'Immediate' && card.immediateTrack !== track) {
+      return false;
+    } else if (ability === 'EndOfGame' && otherTrack(card.immediateTrack) !== track) {
+      return false;
+    }
+  } else if (ganymedeLevel >= 4 && ganymedeLevel <= 10 && ability === 'Both') {
+    // At this level, you can resolve either of the character's abilities,
+    // but not both
+    return false;
+  } else if (ganymedeLevel > 10 && ability !== 'Both') {
+    // at this level, you have to resolve both
     return false;
   }
-  
   return true;
 }
 

@@ -1,12 +1,21 @@
 import _ from "lodash";
 import { countRobots, gainCredits, gainEnergy, gainInfluence, moonLevel, payCredits } from "./game-utils";
-import { GalileoProjectGameState, Player, Moon, RobotInPlay, RobotCard, RobotType, AcquireRobotCtx, RoboticProjectCard, RobotLevel, moons } from "./model";
+import { GalileoProjectGameState, Player, Moon, RobotInPlay, RobotCard, RobotType, PlaceRobotCtx, RoboticProjectCard, moons } from "./model";
 import { peek, takeTop, takeTopN } from "./utils";
+import { changeLevelRobot } from "./levels";
 
 // a list of thing you may still have to do after moving robot levels
 // for now all you can do is update your ropbotic project
 export type MoonLevelResolution = 'UpdateRoboticProject' | 'GainEnergy';
 export type MoonLevelChangeResult = MoonLevelResolution[] | false;
+
+/**
+ * Use this to select a robot in your moon pile.
+ */
+export interface RobotSelection {
+  moon: Moon;
+  index: number;
+}
 
 /**
  * "Buy" a robot from the sales area with influence.
@@ -90,6 +99,15 @@ export function acquireCompletedProject(G: GalileoProjectGameState, player: Play
 }
 
 /**
+ * Only robot project cards should work here
+ * @param robot 
+ * @returns 
+ */
+export function roboticProjectComplete(robot: RoboticProjectCard | undefined): boolean {
+  return !!(robot && robot.type && robot.moon1);
+}
+
+/**
  * Part of the Robotic Sequence develop effect.  Pick the top 4 robot cards and place
  * them into the player's hand.
  * 
@@ -109,16 +127,17 @@ export function resolveRoboticSequencingPick4(G: GalileoProjectGameState, player
  * @param robot 
  * @returns 
  */
-export function resolveRoboticSequencingChoose(G: GalileoProjectGameState, player: Player, robot: RobotCard): boolean {
+export function resolveRoboticSequencingChoose(G: GalileoProjectGameState, player: Player, index: number): boolean {
   if (!player.pick4Robots) {
     return false;
   }
+
+  const robot = player.pick4Robots[index];
 
   if (!player.pick4Robots.includes(robot)) {
     return false;
   }
 
-  const index = player.pick4Robots.indexOf(robot);
   player.pick4Robots.splice(index, 1);
   G.secret.robotDeck.push(...player.pick4Robots);
   player.pick4Robots = undefined;
@@ -132,6 +151,8 @@ export function resolveRoboticSequencingChoose(G: GalileoProjectGameState, playe
 /**
  * Resolve the automated assembly tech by making a whole new robotic
  * project and entering it into play as if acquired.
+ * 
+ * Might do NOTHING if we are out of Project cards
  * 
  * @param G 
  * @param player 
@@ -162,6 +183,9 @@ export function resolveAutomatedAssembly(G: GalileoProjectGameState, player: Pla
   }
 
   const newProject = takeTop(G.secret.roboticProjectCards);
+  if (!newProject) {
+    return true;
+  }
   newProject.moon1 = moon;
   newProject.type = modifier;
   const robotInPlay: RobotInPlay = {
@@ -196,37 +220,8 @@ export function deployRobotToMoon(G: GalileoProjectGameState, player: Player, mo
   if (!action || action.kind !== 'robotToPlace') {
     return false;
   }
-  const robot = (G.actionCtx.pop() as AcquireRobotCtx).robotToPlace;
+  const robot = (G.actionCtx.pop() as PlaceRobotCtx).robotToPlace;
   return placeRobotOnMoon(player, robot, moon);
-}
-
-/**
- * Technician robots are resolved by upping the level of a robot or project
- * of your choice by the number of technicians you have.
- * @param G 
- * @param player 
- * @param robot 
- * @returns 
- */
-export function resolveTechnicianRobot(G: GalileoProjectGameState, player: Player, robot: RobotInPlay): MoonLevelChangeResult {
-  const total = countRobots(player, 'Technician') + 1;
-  return changeLevelRobot(G, player, robot, robot.level + total);
-}
-
-/**
- * Technician robots are resolved by upping the level of a robot or project
- * of your choice by the number of technicians you have.
- * @param G 
- * @param player 
- * @param robot 
- * @returns 
- */
-export function resolveTechnicianProject(G: GalileoProjectGameState, player: Player): boolean {
-  const total = countRobots(player, 'Technician') + 1;
-   if (!player.roboticProject) {
-    player.roboticProject = takeTop(G.secret.roboticProjectCards);
-  }
-  return changeLevelProject(G, player, player.roboticProject?.level + total);
 }
 
 
@@ -236,194 +231,104 @@ export function resolveMinerAbility(G: GalileoProjectGameState, player: Player):
   return true;
 }
 
-export function resolveStarZA1(G: GalileoProjectGameState, player: Player) {
-  gainEnergy(G, player, 1);
+export function resolveStarZA1(G: GalileoProjectGameState, player: Player): boolean {
+  return gainEnergy(G, player, 1);
 }
 
-export function resolveStarZA2(G: GalileoProjectGameState, player: Player) {
-  gainInfluence(G, player, 3);
+export function resolveStarZA2(G: GalileoProjectGameState, player: Player): boolean {
+  return gainInfluence(G, player, 3);
 }
 
-export function resolveStarZA4(G: GalileoProjectGameState, player: Player) {
-  gainCredits(G, player, 2);
-}
-
-export function resolveStarZA5(G: GalileoProjectGameState, player: Player, robot: RobotInPlay): MoonLevelChangeResult {
-  return changeLevelRobot(G, player, robot, robot.level + 3);
+export function resolveStarZA4(G: GalileoProjectGameState, player: Player): boolean {
+  return gainCredits(G, player, 2);
 }
 
 export function resolveStarZB1(G: GalileoProjectGameState, player: Player): boolean {
   return gainEnergy(G, player, 1);
 }
 
-export function resolveStarZB2(G: GalileoProjectGameState, player: Player, robot: RobotInPlay): MoonLevelChangeResult {
-  return changeLevelRobot(G, player, robot, robot.level + 1);
-}
-
-export function resolveSuperconductivityRobot(G: GalileoProjectGameState, player: Player, robot: RobotInPlay): MoonLevelChangeResult {
-  return changeLevelRobot(G, player, robot, 7);
-}
-
-export function resolveSuperconductivityProject(G: GalileoProjectGameState, player: Player): boolean {
-  return changeLevelProject(G, player, 7);
-}
-
 /**
- * Do this when you hire Noor, or when Callisto lets you
- * 
- * @param G 
- * @param player 
- * @param moon 
- * @returns
- */
-export function assignMoonToRoboticProject(G: GalileoProjectGameState, player: Player, moon: Moon): boolean {
-  const index = player.moonAssignemnts.indexOf(moon);
-  if (index === -1) {
-    // player doesn't have the moon passed in
-    return false
-  }
-
-  if (!player.roboticProject) {
-    player.roboticProject = takeTop(G.secret.roboticProjectCards);
-  }
-  player.roboticProject.moon1 = moon;
-  player.moonAssignemnts.splice(index, 1);
-
-  return true;
-}
-
-/**
- * Do this when you hire Marty Simon, or when Callisto lets you
+ * Hire Marty Simon, or when Callisto lets you
  * 
  * @param G 
  * @param player 
  * @param type 
  * @returns 
  */
-export function assignTypeToRoboticProject(G: GalileoProjectGameState, player: Player, type: RobotType): boolean {
-  const index = player.robotModifiers.indexOf(type);
-  if (index === -1) {
+export function assignTypeToRobot(G: GalileoProjectGameState, player: Player, type: RobotType, robotSelection: RobotSelection | null): boolean {
+  const modifierIndex = player.robotModifiers.indexOf(type);
+  if (modifierIndex === -1) {
     // player doesn't have the type
     return false;
   }
 
-  if (!player.roboticProject) {
-    player.roboticProject = takeTop(G.secret.roboticProjectCards);
-  }
-  player.roboticProject.type = type;
-  player.robotModifiers.splice(index, 1);
-  
-  return true;
-}
-
-/**
- * Do this when you hire Noor, or when Callisto lets you
- * 
- * @param G 
- * @param player 
- * @param robot 
- * @param moon 
- * @returns 
- */
-
-export function assignMoonToRobotInPlay(G: GalileoProjectGameState, player: Player, robot: RobotInPlay, moon: Moon): MoonLevelChangeResult {
-  const index = player.moonAssignemnts.indexOf(moon);
-  if (index === -1) {
-    return false
-  }
-
-  const currentMoon = findRobot(player, robot);
-  if(!currentMoon) {
-    return false;
-  }
-
-  if (currentMoon === moon) {
-    return false;
-  }
-
-  if (robot.moon2) {
-    // robot doesn't have a spare moon space
-    return false;
-  }
-
-  robot.moon2 = moon;
-  player.moonAssignemnts.splice(index, 1);
-
-  // move robot
-  return moveRobotToMoon(G, player, robot, moon);
-}
-
-/**
- * Do this when you hire Marty Simon, or when Callisto lets you
- * 
- * @param player 
- * @param type 
- * @param robot 
- * @returns 
- */
-export function assignTypeToRobotInPlay(player: Player, type: RobotType, robot: RobotInPlay): boolean {
-  const index = player.robotModifiers.indexOf(type);
-  if (index === -1) {
-    // player doesn't have the type
-    return false;
-  }
-
-  if (robot.typeModified) {
-    // robot is already modified
-    return false;
-  }
-  player.robotModifiers.splice(index, 1);
-  robot.type = type;
-  robot.typeModified = true;
-  return true;
-}
-
-/**
- * Do this when you hire Mn Ila Zoe
- * 
- * @param G 
- * @param player 
- * @param robot1 
- * @param robot2 
- * @returns 
- */
-export function lowerThenIncreaseRobots(G: GalileoProjectGameState, player: Player, robot1: RobotInPlay | RoboticProjectCard, robot2: RobotInPlay | RoboticProjectCard): MoonLevelChangeResult {
-  if (robot1.level === 1 || robot2.level === 6) {
-    return false;
-  }
-  let result1: MoonLevelChangeResult;
-  if (!roboticProjectComplete(robot1)) {
-    result1 = changeLevelRobot(G, player, robot1 as RobotInPlay, robot1.level - 1);
-  } else {
-    if (changeLevelProject(G, player, robot1.level - 1)) {
-      result1 = false;
-    } else {
-      result1 = [];
-    }
-  }
-
-  if (!result1) {
-    return result1;
-  }
-
-  let result2: MoonLevelChangeResult;
-  if (!roboticProjectComplete(robot2)) {
-    result2 = changeLevelRobot(G, player, robot2 as RobotInPlay, robot2.level + 1); 
-  } else {
-    if (changeLevelProject(G, player, robot2.level + 1)) {
+  if (robotSelection) {
+    const robot = player.moons[robotSelection.moon][robotSelection.index];
+    if (robot.typeModified) {
+      // robot is already modified
       return false;
-    } else {
-      result2 = [];
+    }
+    player.robotModifiers.splice(modifierIndex, 1);
+    robot.type = type;
+    robot.typeModified = true;
+  } else {
+    if (!player.roboticProject) {
+      player.roboticProject = takeTop(G.secret.roboticProjectCards);
+    }
+  
+    if (player.roboticProject) {
+      player.roboticProject.type = type;
+      player.robotModifiers.splice(modifierIndex, 1);
     }
   }
+  return true;
+}
 
-  
-  if (!result2) {
-    return result2;
+/**
+ * Hire Noor, or when Callisto lets you
+ * Pick a robot (moon, index) that has a double assignment, and if it has a free slot, add the moonMarker
+ * 
+ * @param G 
+ * @param player 
+ * @param robot 
+ * @param moon 
+ * @returns 
+ */
+export function assignMoonToRobot(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection | null, moonMarker: Moon): MoonLevelChangeResult {
+  const moonMarkerIndex = player.moonAssignemnts.indexOf(moonMarker);
+  if (moonMarkerIndex === -1) {
+    return false
   }
 
-  return [...result1, ...result2];
+  if (robotSelection) {
+    const robot = player.moons[robotSelection.moon][robotSelection.index]; 
+    if (robot.moon1 === moonMarker) {
+      return false;
+    }
+
+    if (robot.moon2) {
+      // robot doesn't have a spare moon space
+      return false;
+    }
+
+    robot.moon2 = moonMarker;
+    player.moonAssignemnts.splice(moonMarkerIndex, 1);
+
+    // move robot
+    return moveRobotToMoon(player, robot, moonMarker);
+  } else {
+    if (!player.roboticProject) {
+      player.roboticProject = takeTop(G.secret.roboticProjectCards);
+    }
+
+    if (player.roboticProject) {
+      player.roboticProject.moon1 = moonMarker;
+      player.moonAssignemnts.splice(moonMarkerIndex, 1);
+    }
+    return [];
+  } 
 }
+
 
 /**
  * Hire Leonard Simon
@@ -435,7 +340,9 @@ export function lowerThenIncreaseRobots(G: GalileoProjectGameState, player: Play
  * @param robot 
  * @returns 
  */
-export function buyEnergyThenMove(G: GalileoProjectGameState, player: Player, robot?: RobotInPlay): MoonLevelChangeResult {
+export function buyEnergyThenMove(G: GalileoProjectGameState, player: Player, robotSelection?: RobotSelection): MoonLevelChangeResult {
+  const robot = robotSelection ? selectRobot(player, robotSelection) : undefined;
+
   if (robot && !robot.moon2) {
     return false;
   }
@@ -448,12 +355,7 @@ export function buyEnergyThenMove(G: GalileoProjectGameState, player: Player, ro
     return [];
   }
 
-  const moon = findRobot(player, robot);
-  if (!moon) {
-    return false;
-  }
-
-  return moveRobotToMoon(G, player, robot, moon === robot.moon1 ? robot.moon2! : robot.moon1);
+  return moveRobotToMoon(player, robot, robotSelection!.moon === robot.moon1 ? robot.moon2! : robot.moon1);
 }
 
 /**
@@ -466,24 +368,22 @@ export function buyEnergyThenMove(G: GalileoProjectGameState, player: Player, ro
  * @param robot 
  * @returns 
  */
-export function moveRobotThenIncrease(G: GalileoProjectGameState, player: Player, robot: RobotInPlay): MoonLevelChangeResult {
+export function moveRobotThenIncrease(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection): MoonLevelChangeResult {
+  const robot = selectRobot(player, robotSelection);
+
   if (!robot.moon2) {
     // can only move robot with double assignment
     return false;
   }
-  const moon = findRobot(player, robot);
-  if (!moon) {
-    return false;
-  }
 
   const destMoon = robot.moon1 || robot.moon2;
-  
-  const result1 = moveRobotToMoon(G, player, robot, destMoon);
+ 
+  const result1 = moveRobotToMoon(player, robot, destMoon);
   if (!result1) {
     return result1;
   }
 
-  const result2 = changeLevelRobot(G, player, robot, robot.level + 1);
+  const result2 = changeLevelRobot(G, player, robot, 1);
   if (!result2) {
     return result2;
   }
@@ -530,7 +430,7 @@ function getIoDiscount(level: number): number {
  * @param destMoon 
  * @returns 
  */
-function moveRobotToMoon(G: GalileoProjectGameState, player: Player, robot: RobotInPlay, destMoon: Moon): MoonLevelChangeResult {
+function moveRobotToMoon(player: Player, robot: RobotInPlay, destMoon: Moon): MoonLevelChangeResult {
   if (!robot.moon2) {
     return false;
   }
@@ -549,71 +449,6 @@ function moveRobotToMoon(G: GalileoProjectGameState, player: Player, robot: Robo
   }
  
   return [...fromResult, ...destResult];
-}
-
-
-/**
- * I'm going to the trouble of adjusting the tokens on the board.
- * But I'm not sure if I really need to do that.
- * 
- * @param G 
- * @param level 
- * @param newLevel 
- * @returns 
- */
-function adjustLevel(G: GalileoProjectGameState, level: RobotLevel, newLevel: number): boolean {
-  if (level.level != level.baseLevel) {
-    // level has been modified, so that means there's a token here.
-    // we're going to return the token to the pool
-    if (level.level === 1 || level.level === 2) {
-      G.levels_1_2++;
-    } else if (level.level === 3 || level.level === 4) {
-      G.levels_3_4++;
-    } else if (level.level === 5 || level.level === 6) {
-      G.levels_5_6++;
-    } else if (level.level === 7) {
-      G.levels_7++;
-    } 
-    level.level = level.baseLevel;
-  }
-
-  if (newLevel != level.baseLevel) {
-    // new level requires a token, so take from the pool
-    if (newLevel === 1 || newLevel === 2) {
-      G.levels_1_2--;
-    } else if (newLevel === 3 || newLevel === 4) {
-      G.levels_3_4--;
-    } else if (newLevel === 5 || newLevel === 6) {
-      G.levels_5_6--;
-    } else if (newLevel === 7) {
-      G.levels_7--;
-    } 
-  }
-
-  level.level = newLevel;
-  return true;
-}
-
-function changeLevelRobot(G: GalileoProjectGameState, player: Player, robot: RobotInPlay, newLevel: number): MoonLevelChangeResult {
-  const moon = findRobot(player, robot);
-  if (!moon) {
-    return false;
-  }
-
-  const startMoonLevel = moonLevel(player, moon);
-  adjustLevel(G, robot, Math.min(newLevel, 6));
-  const endMoonLevel = moonLevel(player, moon);
-
-  return calculateMoonMarkers(startMoonLevel, endMoonLevel, moon);
-}
-
-function changeLevelProject(G: GalileoProjectGameState, player: Player, newLevel: number): boolean {
-  const project = player.roboticProject;
-  if (!project) {
-    return false;
-  }
-
-  return adjustLevel(G, project, Math.min(newLevel, 6));
 }
 
 function placeRobotOnMoon(player: Player, robot: RobotInPlay, moon: Moon): MoonLevelChangeResult  {
@@ -636,7 +471,7 @@ function placeRobotOnMoon(player: Player, robot: RobotInPlay, moon: Moon): MoonL
  * @param moon 
  * @returns 
  */
-function calculateMoonMarkers(startMoonLevel: number, endMoonLevel: number, moon: Moon): MoonLevelResolution[] {
+export function calculateMoonMarkers(startMoonLevel: number, endMoonLevel: number, moon: Moon): MoonLevelResolution[] {
   if (moon !== 'Callisto' && moon !== 'Europa') {
     return [];
   }
@@ -658,7 +493,7 @@ function calculateMoonMarkers(startMoonLevel: number, endMoonLevel: number, moon
   }
 }
 
-function findRobot(player: Player, robot: RobotInPlay): Moon | undefined {
+export function findRobot(player: Player, robot: RobotInPlay): Moon | undefined {
   for(const m of moons) {
     if (_.includes(player.moons[m], robot)) {
       return m;
@@ -667,6 +502,10 @@ function findRobot(player: Player, robot: RobotInPlay): Moon | undefined {
   return undefined;
 }
 
-function roboticProjectComplete(robot: RoboticProjectCard | RobotInPlay | undefined): boolean {
-  return !!(robot && robot.type && robot.moon1);
+function isRoboticProject(robot: RoboticProjectCard | RobotCard | RobotInPlay): boolean {
+  return 'energy' in robot;
+}
+
+export function selectRobot(player: Player, robotSelection: RobotSelection): RobotInPlay {
+  return player.moons[robotSelection.moon][robotSelection.index];
 }

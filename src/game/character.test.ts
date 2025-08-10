@@ -1,6 +1,6 @@
 import { hireCharacter } from "./character";
 import { CharacterCtx, RandomAPI } from "./model";
-import { setup } from "./setup";
+import { setupGame } from "./setup";
 
 class NotRandomAPI {
 
@@ -14,7 +14,7 @@ class NotRandomAPI {
 
 describe('Hiring tests', () => {
   it('should handle bad input', () => {
-    const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+    const G = setupGame(["0", "1"], new NotRandomAPI() as RandomAPI);
     const player = G.players[0];
     player.influence = 3;
     expect(hireCharacter(G, player, -1)).toBe(false);
@@ -30,7 +30,7 @@ describe('Hiring tests', () => {
   });
   
   it('should gain influence by hiring', () => {
-    const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+    const G = setupGame(["0", "1"], new NotRandomAPI() as RandomAPI);
     const player = G.players[0];
     player.influence = 3;
     player.track = 'Earth';
@@ -42,7 +42,7 @@ describe('Hiring tests', () => {
   });
 
   it('should gain less influence by hiring index 2', () => {
-    const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+    const G = setupGame(["0", "1"], new NotRandomAPI() as RandomAPI);
     const player = G.players[0];
     player.influence = 3;
     player.track = 'Earth';
@@ -54,7 +54,7 @@ describe('Hiring tests', () => {
   });
   
   it('should gain less influence by hiring index 3', () => {
-    const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+    const G = setupGame(["0", "1"], new NotRandomAPI() as RandomAPI);
     const player = G.players[0];
     player.influence = 3;
     player.track = 'Earth';
@@ -66,7 +66,7 @@ describe('Hiring tests', () => {
   });  
   
   it('should gain less influence by hiring index 4', () => {
-    const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+    const G = setupGame(["0", "1"], new NotRandomAPI() as RandomAPI);
     const player = G.players[0];
     player.influence = 3;
     player.track = 'Earth';
@@ -78,7 +78,7 @@ describe('Hiring tests', () => {
   });  
   
   it('should gain megacredit by hiring', () => {
-    const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+    const G = setupGame(["0", "1"], new NotRandomAPI() as RandomAPI);
     G.charactersForHire[0] = {
       name: 'MartySimon',
       baseInfluence: 2,
