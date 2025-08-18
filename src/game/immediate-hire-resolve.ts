@@ -1,92 +1,107 @@
 import { INVALID_MOVE } from "boardgame.io/dist/types/packages/core";
 import { gainEnergy, gainCredits, gainInfluence, processMoonResult } from "./game-utils";
-import { increaseTwoRobots } from "./levels";
-import { GalileoProjectGameState, GalileoProjectMoveCtx, RobotType, Moon, DiscardCharacterCtx, KeepCharacterCtx } from "./model";
-import { RobotSelection, roboticProjectComplete, acquireCompletedProject, assignTypeToRobot, assignMoonToRobot } from "./robot";
-import { peek } from "./utils";
-import { robotAbilityStage, nextStage } from "./game";
+import { applyHunterPerksBonuses, increaseTwoRobots, incrementLevel, lowerThenIncreaseRobots, moveRobotThenIncrease } from "./levels";
+import { GalileoProjectMoveCtx, RobotType, Moon } from "./model";
+import { RobotSelection, roboticProjectComplete, acquireCompletedProject, assignTypeToRobot, assignMoonToRobot, buyEnergyThenMove } from "./robot";
+import { resolveRobotStage, nextStage } from "./game";
 
-
-
-const ImmediateMnDiatExpi = (moveCtx: GalileoProjectMoveCtx, robot: RobotSelection | null) => {
-  const { G, events } = moveCtx;
-};
-
-const ImmediateMnEliotBan = (moveCtx: GalileoProjectMoveCtx) => {
+export const ImmediateMsChau = (moveCtx: GalileoProjectMoveCtx, robot1: RobotSelection | null, robot2: RobotSelection | null) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
-  gainEnergy(G, player, 1);
-  events.setStage(nextStage(G));
-};
-
-const ImmediateMnHunterPerks = (moveCtx: GalileoProjectMoveCtx) => {
-  const { G, events } = moveCtx;
-};
-
-const ImmediateMnIlaZoe = (moveCtx: GalileoProjectMoveCtx) => {
-  const { G, events } = moveCtx;
-};
-
-const ImmediateMnLeonardSimon = (moveCtx: GalileoProjectMoveCtx) => {
-  const { G, events } = moveCtx;
-};
-
-const ImmediateMnMilutinMadic = (moveCtx: GalileoProjectMoveCtx) => {
-  const { G, playerID, events } = moveCtx;
-  const player = G.players[playerID];
-  gainCredits(G, player, 2);
-  events.setStage(nextStage(G));
-};
-
-const ImmediateMsChau = (moveCtx: GalileoProjectMoveCtx, robot1: RobotSelection | null, robot2: RobotSelection | null) => {
-  const { G, playerID, events } = moveCtx;
-  const player = G.players[playerID];
-  const moonResult = increaseTwoRobots(G, player, robot1, robot2);
-  if (!moonResult) {
+  const result = increaseTwoRobots(G, player, robot1, robot2);
+  if (!result) {
     return INVALID_MOVE;
   }
-
-  const nonEnergyResult = processEnergy(G, player, moonResult);
-  nonEnergyResult.forEach(r => {
-    if (r === 'UpdateRoboticProject') {
-      G.actionCtx.push({ kind: 'placeModifier' });
-    }
-  }); 
+  processMoonResult(G, player, result);
   events.setStage(nextStage(G));
 };
 
-const ImmediateMsLee = (moveCtx: GalileoProjectMoveCtx) => {
+export const ImmediateMnDiatExpi = (moveCtx: GalileoProjectMoveCtx, robot: RobotSelection | null) => {
+  const { G,  playerID, events } = moveCtx;
+  const player = G.players[playerID];
+  const result = incrementLevel(G, player, robot, 1);
+  if (!result) {
+    return INVALID_MOVE;
+  }
+  processMoonResult(G, player, result);
+  events.setStage(nextStage(G));
+};
+
+export const ImmediateMnMilutinMadic = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
-  gainInfluence(G, player, 3);
+  if (gainEnergy(G, player, 1)) {
+    return INVALID_MOVE;
+  }
   events.setStage(nextStage(G));
 };
 
-const ImmediateNakkia = (moveCtx: GalileoProjectMoveCtx) => {
-  const { G, events } = moveCtx;
+export const GAIN_MEGACREDIT = 0;
+export const GAIN_INFLUENCE = 1;
+export const INCREASE_LEVEL = 2;
+export type HunterBonus = 0 | 1 | 2;
+export const ImmediateMnHunterPerks = (moveCtx: GalileoProjectMoveCtx, bonuses: HunterBonus[], robotSelection?: RobotSelection|null) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+
+  const result = applyHunterPerksBonuses(G, player, bonuses, robotSelection);
+  if (!result) {
+    return INVALID_MOVE;
+  }
+  processMoonResult(G, player, result);
+  events.setStage(nextStage(G));
 };
 
-const ImmediateNoor = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null, moon: Moon) => {
+export const ImmediateMnEliotBan = (moveCtx: GalileoProjectMoveCtx) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+  if (!gainCredits(G, player, 2)) {
+    return INVALID_MOVE;
+  }
+  events.setStage(nextStage(G));
+};
+
+export const ImmediateTarakFreeman = (moveCtx: GalileoProjectMoveCtx) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+  if (gainCredits(G, player, 1)) {
+    return INVALID_MOVE;
+  }
+  events.setStage(nextStage(G));
+};
+
+export const ImmediateNoor = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null, moon: Moon) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
  
-  const moonResult = assignMoonToRobot(G, player, robotSelection, moon);
-  if (!moonResult) {
+  const result = assignMoonToRobot(G, player, robotSelection, moon);
+  if (!result) {
     return INVALID_MOVE;
   }
-  processMoonResult(G, player, moonResult);
+  processMoonResult(G, player, result);
   
   let next: string;
   if (player.roboticProject && roboticProjectComplete(player.roboticProject)) {
     acquireCompletedProject(G, player);
-    next = robotAbilityStage(G);
+    next = resolveRobotStage(G);
   } else {
     next = nextStage(G);
   }
   events.setStage(next);
 }
 
-const ImmediateMartySimon = (moveCtx: GalileoProjectMoveCtx, type: RobotType, robotSelection: RobotSelection | null) => {
+export const ImmediateMnIlaZoe = (moveCtx: GalileoProjectMoveCtx, robot1: RobotSelection | null, robot2: RobotSelection | null, level: number) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+  const result = lowerThenIncreaseRobots(G, player, robot1, robot2, level);
+  if (!result) {
+    return INVALID_MOVE;
+  }
+  processMoonResult(G, player, result);
+  events.setStage(nextStage(G));
+};
+
+export const ImmediateMartySimon = (moveCtx: GalileoProjectMoveCtx, type: RobotType, robotSelection: RobotSelection | null) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
@@ -97,16 +112,41 @@ const ImmediateMartySimon = (moveCtx: GalileoProjectMoveCtx, type: RobotType, ro
   let next: string;
   if (player.roboticProject && roboticProjectComplete(player.roboticProject)) {
     acquireCompletedProject(G, player);
-    next = robotAbilityStage(G);
+    next = resolveRobotStage(G);
   } else {
     next = nextStage(G);
   }
   events.setStage(next);
 };
 
-const ImmediateTarakFreeman = (moveCtx: GalileoProjectMoveCtx) => {
+export const ImmediateMsLee = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
-  gainCredits(G, player, 1);
+  if (!gainInfluence(G, player, 3) ) {
+    return INVALID_MOVE;
+  }
+  events.setStage(nextStage(G));
+};
+
+export const ImmediateNakkia = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+
+  const result = moveRobotThenIncrease(G, player, robotSelection);
+  if (!result) {
+    return INVALID_MOVE;
+  }
+  processMoonResult(G, player, result);
+  events.setStage(nextStage(G));
+};
+
+export const ImmediateMnLeonardSimon = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+  const result = buyEnergyThenMove(G, player, robotSelection);
+  if (!result) {
+    return INVALID_MOVE;
+  }
+  processMoonResult(G, player, result);
   events.setStage(nextStage(G));
 };

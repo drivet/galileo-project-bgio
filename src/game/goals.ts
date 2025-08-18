@@ -37,24 +37,6 @@ export function claimGoal(G: GalileoProjectGameState, player: Player, index: num
   return true;
 }
 
-export function resolveStarZB5(G: GalileoProjectGameState, player: Player, index: number): boolean {
-  if (index < 0 || index > 3) {
-    return false;
-  }
-
-  const goalTracker = G.goals[index];
-  if (goalTracker.players.length >= 3) {
-    return false;
-  }
-
-  if (goalTracker.players.includes(player.playerID)) {
-    return false;
-  }
-  
-  goalTracker.players.push(player.playerID);
-  return true;
-}
-
 function validateControl4RobotsLevel6(player: Player): boolean {
   return allRobots(player).filter(r => r.level >= 6).length >= 4;
 }

@@ -1,17 +1,17 @@
 
-import { gainInfluence, gainCredits, countRobots, moonLevel, otherTrack } from "./game-utils";
+import { gainInfluence, gainCredits, moonLevel, otherTrack } from "./game-utils";
 import { CharacterAbility, CharacterCard, DiscardCharacterCtx, GalileoProjectGameState, KeepCharacterCtx, Player, Track } from "./model";
 import { peek } from "./utils";
 
-function pushCharacterCtx(G: GalileoProjectGameState, ability: CharacterAbility, card: CharacterCard) {
+export function pushCharacterCtx(G: GalileoProjectGameState, ability: CharacterAbility, card: CharacterCard) {
   if (ability === 'Immediate') {
     G.actionCtx.push({
-      kind: 'discardCharacter',
+      stage: 'DiscardCharacter',
       character: card,
     });
   } else {
      G.actionCtx.push({
-      kind: 'keepCharacter',
+      stage: 'KeepCharacter',
       character: card,
     });
   }
@@ -36,6 +36,7 @@ export function hireCharacter(G: GalileoProjectGameState, player: Player, index:
   if (!validateHire(player, card, ability, track)) {
     return false;
   }
+  G.charactersForHire[index] = null;
 
   if (player.influence === 0) {
     player.track = track;
@@ -49,49 +50,6 @@ export function hireCharacter(G: GalileoProjectGameState, player: Player, index:
 }
 
 
-export function resolveBuilderAbility(G: GalileoProjectGameState, player: Player, index: number, ability: CharacterAbility) {
-  const total = countRobots(player, 'Builder') + 1;
-  if (index >= total || index < 0 || index > 4) {
-    return false;
-  }
-
-  if (ability === 'Both') {
-    return false;
-  }
-
-  const character = G.charactersForHire[index];
-  if (!character) {
-    return false;
-  }
-  G.charactersForHire[index] = null;
-  pushCharacterCtx(G, ability, character);
-}
-
-export function resolveStarZA3(G: GalileoProjectGameState, ability: CharacterAbility) {
-  const index = 0;
-  const character = G.charactersForHire[index];
-  if (!character) {
-    return false;
-  }
-  if (ability === 'Both') {
-    return false;
-  }
-  G.charactersForHire[index] = null;
-  pushCharacterCtx(G, ability, character);
-}
-
-export function resolveStarZB3(G: GalileoProjectGameState, player: Player) {
-  const index = 0;
-  const card = G.charactersForHire[index];
-  if (!card) {
-    return false;
-  }
-  G.charactersForHire[index] = null;
-  gainInfluence(G, player, adjustCharacterInfluence(card, index));
-  gainCredits(G, player, card.megacredits);
-  G.secret.discardedCharacters.push(card);
-}
-
 /**
  * The bottom action of each hire.
  * 
@@ -103,7 +61,7 @@ export function resolveStarZB3(G: GalileoProjectGameState, player: Player) {
  */
 export function keepCharacter(G: GalileoProjectGameState, player: Player, characterToFire?: CharacterCard): boolean {
   const action = peek(G.actionCtx);
-  if (!action || action.kind !== 'keepCharacter') {
+  if (!action || action.stage !== 'KeepCharacter') {
     return false;
   }
   
@@ -116,7 +74,7 @@ export function keepCharacter(G: GalileoProjectGameState, player: Player, charac
       return false;
     }
     player.characters.splice(index, 1);
-    G.secret.discardedCharacters.unshift(characterToFire);
+    G.discardedCharacters.unshift(characterToFire);
   }
   const character = (G.actionCtx.pop() as KeepCharacterCtx).character;
   player.characters.push(character); 
@@ -125,11 +83,11 @@ export function keepCharacter(G: GalileoProjectGameState, player: Player, charac
 
 export function discardCharacter(G: GalileoProjectGameState): boolean {
   const action = peek(G.actionCtx);
-  if (!action || action.kind !== 'discardCharacter') {
+  if (!action || action.stage !== 'DiscardCharacter') {
     return false;
   }
   const character = (G.actionCtx.pop() as DiscardCharacterCtx).character;
-  G.secret.discardedCharacters.push(character);
+  G.discardedCharacters.push(character);
   return true;
 }
 

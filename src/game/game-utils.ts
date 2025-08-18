@@ -1,7 +1,8 @@
 import _ from "lodash";
 import { GalileoProjectGameState, Moon, Player, RobotType, TechId, Track } from "./model";
 import { slideAndReplace } from "./utils";
-import { MoonLevelResolution } from "./robot";
+import { MoonLevelResolution } from "./levels";
+
 
 export function switchTrack(G: GalileoProjectGameState, player: Player): boolean {
   if (player.megacredits === 0 || !player.track) {
@@ -116,7 +117,7 @@ export function processMoonResult(G: GalileoProjectGameState, player: Player, mo
   const nonEnergyResult = processEnergy(G, player, moonResult);
   nonEnergyResult.forEach(r => {
     if (r === 'UpdateRoboticProject') {
-      G.actionCtx.push({ kind: 'placeModifier' });
+      G.actionCtx.push({ stage: 'PlaceModifier' });
     }
   });
 }

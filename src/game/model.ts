@@ -149,27 +149,27 @@ export interface GoalTracker {
 export type CharacterAbility = 'Immediate' | 'EndOfGame' | 'Both';
 
 export interface DiscardCharacterCtx {
-  kind: 'discardCharacter'
+  stage: 'DiscardCharacter'
   character: CharacterCard;
 }
 
 export interface KeepCharacterCtx {
-  kind: 'keepCharacter'
+  stage: 'KeepCharacter'
   character: CharacterCard;
 }
 
 export interface PlaceRobotCtx {
-  kind: 'robotToPlace';
+  stage: 'PlaceRobot';
   robotToPlace: RobotInPlay;
 }
 
 export interface KeepTechCtx {
-  kind: 'techToKeep';
+  stage: 'KeepTech';
   techToKeep: TechnologySide;
 }
 
 export interface PlaceModifierCtx {
-  kind: 'placeModifier';
+  stage: 'PlaceModifier';
 }
 
 export type ActionCtx = DiscardCharacterCtx | KeepCharacterCtx | PlaceRobotCtx | KeepTechCtx | PlaceModifierCtx;
@@ -178,9 +178,10 @@ export interface GalileoProjectGameState {
   secret: {
     robotDeck: RobotCard[];
     characterDeck: CharacterCard[];
-    discardedCharacters: CharacterCard[];
     roboticProjectCards: RoboticProjectCard[];
   };
+
+  discardedCharacters: CharacterCard[];
 
   // used at the start of the game to give people resources
   // take one, blank out the index

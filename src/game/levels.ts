@@ -1,35 +1,81 @@
-import { countRobots, moonLevel } from "./game-utils";
-import { GalileoProjectGameState, RobotLevel, Player, RobotInPlay } from "./model";
-import { RobotSelection, MoonLevelChangeResult, calculateMoonMarkers, findRobot, selectRobot } from "./robot";
+import { gainCredits, gainInfluence, moonLevel } from "./game-utils";
+import { GalileoProjectGameState, RobotLevel, Player, RobotInPlay, Moon } from "./model";
+import { RobotSelection, findRobot, selectRobot } from "./robot";
 
+// a list of thing you may still have to do after moving robot levels
+// for now all you can do is update your ropbotic project
+export type MoonLevelResolution = 'UpdateRoboticProject' | 'GainEnergy';
+export type MoonLevelChangeResult = MoonLevelResolution[] | false;
+
+export const GAIN_MEGACREDIT = 0;
+export const GAIN_INFLUENCE = 1;
+export const INCREASE_LEVEL = 2;
+export type HunterBonus = 0 | 1 | 2;
+export function applyHunterPerksBonuses(G: GalileoProjectGameState, player: Player, bonuses: HunterBonus[], robotSelection?: RobotSelection|null): MoonLevelChangeResult {
+  const maxBonusCount = Math.min(player.technologies.length, 3);
+  if (bonuses.length > maxBonusCount) {
+    return false;
+  }
+
+  const set = new Set(bonuses);
+  if (set.size < bonuses.length) {
+    // some bonues appeared twice
+    return false;
+  }
+
+  let result: MoonLevelChangeResult = [];
+  bonuses.forEach(b => {
+    if (b === GAIN_MEGACREDIT) {
+      if (!gainCredits(G, player, 1)) {
+        return false;
+      }
+    } else if (b === GAIN_INFLUENCE) {
+      if (gainInfluence(G, player, 2)) {
+        return false;
+      }
+    } else if (b === INCREASE_LEVEL) {
+      if (robotSelection !== undefined) {
+        result = incrementLevel(G, player, robotSelection, 1);
+      } else {
+        return false;
+      }
+    }
+  });
+
+  return result;
+}
 
 /**
- * Technician robots are resolved by upping the level of a robot or project
- * of your choice by the number of technicians you have.
- * @param G 
+ * Hire Nakkia (or part of Leonard Simon)
+ * 
+ * Move a robot to another moon (must have a double moon assignement), then increase level by 1
+ * 
+ * @param G
  * @param player 
  * @param robot 
  * @returns 
  */
-export function resolveTechnician(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection | null): MoonLevelChangeResult {
-  const total = countRobots(player, 'Technician') + 1;
-  return incrementLevel(G, player, robotSelection, total);
-}
+export function moveRobotThenIncrease(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection): MoonLevelChangeResult {
+  const robot = selectRobot(player, robotSelection);
 
-export function resolveStarZA5(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection | null): MoonLevelChangeResult {
-  return incrementLevel(G, player, robotSelection, 3);
-}
+  if (!robot.moon2) {
+    // can only move robot with double assignment
+    return false;
+  }
 
-export function resolveStarZB2(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection | null): MoonLevelChangeResult {
-  return incrementLevel(G, player, robotSelection, 1);
-}
+  const destMoon = robot.moon1 || robot.moon2;
+ 
+  const result1 = moveRobotToMoon(player, robot, destMoon);
+  if (!result1) {
+    return result1;
+  }
 
-export function resolveSuperconductivity(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection | null): MoonLevelChangeResult {
-  return changeLevel(G, player, robotSelection, 7);
-}
+  const result2 = changeLevelRobot(G, player, robot, 1);
+  if (!result2) {
+    return result2;
+  }
 
-export function resolveMnDiatExpi(G: GalileoProjectGameState, player: Player, robotSelection: RobotSelection | null): MoonLevelChangeResult {
-  return incrementLevel(G, player, robotSelection, 1);
+  return [...result1, ...result2];
 }
 
 /**
@@ -109,7 +155,50 @@ export function changeLevel(G: GalileoProjectGameState, player: Player, robotSel
   }
 }
 
-export function changeLevelRobot(G: GalileoProjectGameState, player: Player, robot: RobotInPlay, newLevel: number): MoonLevelChangeResult {
+/**
+ * This can only be done on a deployed robot with a double moon assignment
+ * This can result in several "extra" actions after the move, since two moon
+ * levels are being manipulated.
+ * 
+ * @param G 
+ * @param player 
+ * @param robot 
+ * @param destMoon 
+ * @returns 
+ */
+export function moveRobotToMoon(player: Player, robot: RobotInPlay, destMoon: Moon): MoonLevelChangeResult {
+  if (!robot.moon2) {
+    return false;
+  }
+
+  const fromMoon = findRobot(player, robot)!;
+  const startMoonLevel = moonLevel(player, fromMoon);
+  const index = player.moons[fromMoon].indexOf(robot);
+  if (index > -1) {
+    player.moonAssignemnts.splice(index, 1);
+  }
+  const endMoonLevel = moonLevel(player, fromMoon);
+  const fromResult = calculateMoonMarkers(startMoonLevel, endMoonLevel, fromMoon);
+  const destResult = placeRobotOnMoon(player, robot, destMoon);
+  if (!destResult) {
+    return false;
+  }
+ 
+  return [...fromResult, ...destResult];
+}
+
+export function placeRobotOnMoon(player: Player, robot: RobotInPlay, moon: Moon): MoonLevelChangeResult  {
+  if (robot.moon1 !== moon && robot.moon2 !== moon) {
+    return false;
+  }
+  const startMoonLevel = moonLevel(player, moon);
+  player.moons[moon].push(robot);
+  const endMoonLevel = moonLevel(player, moon);
+  
+  return calculateMoonMarkers(startMoonLevel, endMoonLevel, moon)
+}
+
+function changeLevelRobot(G: GalileoProjectGameState, player: Player, robot: RobotInPlay, newLevel: number): MoonLevelChangeResult {
   const moon = findRobot(player, robot);
   if (!moon) {
     return false;
@@ -122,13 +211,43 @@ export function changeLevelRobot(G: GalileoProjectGameState, player: Player, rob
   return calculateMoonMarkers(startMoonLevel, endMoonLevel, moon);
 }
 
-export function changeLevelProject(G: GalileoProjectGameState, player: Player, newLevel: number): boolean {
+function changeLevelProject(G: GalileoProjectGameState, player: Player, newLevel: number): boolean {
   const project = player.roboticProject;
   if (!project) {
     return false;
   }
 
   return adjustLevel(G, project, Math.min(newLevel, 6));
+}
+
+/**
+ * No state change made here, just checking what special markers exist between the start and end levels
+ * 
+ * @param startMoonLevel 
+ * @param endMoonLevel 
+ * @param moon 
+ * @returns 
+ */
+function calculateMoonMarkers(startMoonLevel: number, endMoonLevel: number, moon: Moon): MoonLevelResolution[] {
+  if (moon !== 'Callisto' && moon !== 'Europa') {
+    return [];
+  }
+
+  const [smaller, bigger] = 
+     startMoonLevel < endMoonLevel ? [startMoonLevel, endMoonLevel] : [endMoonLevel, startMoonLevel];
+  
+  if (smaller === bigger) {
+    return [];
+  }
+
+  if (moon === 'Callisto') {
+    const matched = [2, 7, 12].filter(p => p > smaller && p <= bigger).length;
+    return (Array(matched) as MoonLevelResolution[]).fill('UpdateRoboticProject');
+  } else {
+    // Europa
+    const matched = [3, 6, 9].filter(p => p > smaller && p <= bigger).length;
+    return (Array(matched) as MoonLevelResolution[]).fill('GainEnergy');
+  }
 }
 
 /**
