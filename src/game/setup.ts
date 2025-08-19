@@ -1,4 +1,3 @@
-import { Ctx } from 'boardgame.io';
 import _ from 'lodash';
 
 import {
@@ -14,7 +13,6 @@ import {
   RobotCard,
   RoboticProjectCard,
   RobotType,
-  TechId,
   TechnologySide,
   Track,
 } from './model';
@@ -184,57 +182,57 @@ function setupTechnologies(numPlayers: number, random: RandomAPI): TechnologySid
       energy: 1,
       megacredits: 1,
       vp: 1,
-      techId: 'AutomatedDrilling'
+      techId: 'AutomatedDrilling',
     },
     {
       energy: 1,
       megacredits: 1,
       vp: 2,
-      techId: 'EarthMarsHighway'
+      techId: 'EarthMarsHighway',
     },
     {
       energy: 3,
       vp: 3,
       megacredits: 0,
-      techId: 'CryptoExchange'
+      techId: 'CryptoExchange',
     },
     {
       energy: 2,
       megacredits: 2,
       vp: 2,
-      techId: 'AiClone'
+      techId: 'AiClone',
     },
     {
       energy: 1,
       megacredits: 1,
       vp: 1,
-      techId: 'AutomatedDrilling'
+      techId: 'AutomatedDrilling',
     },
     {
       energy: 3,
       megacredits: 1,
       vp: 1,
-      techId: 'Superconductivity'
+      techId: 'Superconductivity',
     },
     {
       energy: 2,
       megacredits: 2,
       vp: 2,
-      techId: 'AutomatedAssembly'
+      techId: 'AutomatedAssembly',
     },
     {
       energy: 2,
       megacredits: 3,
       vp: 1,
-      techId: 'RoboticSequencing'
+      techId: 'RoboticSequencing',
     },
     {
       energy: 3,
       megacredits: 1,
       vp: 1,
-      techId: 'MemoryScanner'
-    }
-  ]
+      techId: 'MemoryScanner',
+    },
+  ];
 
   const tech1: TechnologySide = randInt(random, 2) === 0 ? technologies[0] : technologies[1];
   const tech2: TechnologySide = randInt(random, 2) === 0 ? technologies[2] : technologies[3];
@@ -278,7 +276,7 @@ function initPlayers(playerIDs: string[]): Player[] {
       Ganymede: [],
       Io: [],
     },
-    technologies: [] as TechnologySide[]
+    technologies: [] as TechnologySide[],
   }));
 }
 
@@ -287,9 +285,7 @@ export function setupGame(playerIDs: string[], random: RandomAPI): GalileoProjec
   const shuffledRobotCards = shuffle(random, [...robotCards]);
   const usedCharacterCards = [...characterCards].filter(
     (c) =>
-      !c.marker ||
-      (c.marker === '3+' && numPlayers >= 3) ||
-      (c.marker === '4' && numPlayers === 4),
+      !c.marker || (c.marker === '3+' && numPlayers >= 3) || (c.marker === '4' && numPlayers === 4),
   );
   const shuffledCharacterCards = shuffle(random, usedCharacterCards);
 
@@ -321,7 +317,6 @@ export function setupGame(playerIDs: string[], random: RandomAPI): GalileoProjec
     secret: {
       robotDeck: shuffledRobotCards,
       characterDeck: shuffledCharacterCards,
-      discardedCharacters: [],
       roboticProjectCards: shuffledProjectCards,
     },
 
@@ -331,7 +326,7 @@ export function setupGame(playerIDs: string[], random: RandomAPI): GalileoProjec
     levels_3_4: 21,
     levels_5_6: 16,
     levels_7: 3,
-
+    discardedCharacters: [],
     actionCtx: [],
   };
 }

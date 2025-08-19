@@ -15,7 +15,7 @@ export interface RobotLevel {
   level: number;
 }
 
-export interface RobotCard extends RobotLevel  {
+export interface RobotCard extends RobotLevel {
   type: RobotType;
   // true if the type is from a modifier; can't have more than one
   typeModified: boolean;
@@ -42,10 +42,10 @@ export interface RoboticProjectCard extends RobotLevel {
 export interface RobotInPlay extends RobotLevel {
   type: RobotType;
   typeModified: boolean;
-  
+
   moon1: Moon;
-  moon2: Moon | null;  
-  
+  moon2: Moon | null;
+
   track?: Track;
 }
 
@@ -124,7 +124,7 @@ export interface Player {
   megacredits: number;
   energy: number;
   goalMarkers: number;
-  moons: { [moon in Moon]: (RobotInPlay)[] };
+  moons: { [moon in Moon]: RobotInPlay[] };
 
   // 4 (initial) moon assignments, 4 (initial) robot modifier
   moonAssignemnts: Moon[];
@@ -140,7 +140,6 @@ export interface Player {
   pick4Robots?: RobotCard[];
 }
 
-
 export interface GoalTracker {
   goal: GoalId;
   players: PlayerID[];
@@ -149,12 +148,12 @@ export interface GoalTracker {
 export type CharacterAbility = 'Immediate' | 'EndOfGame' | 'Both';
 
 export interface DiscardCharacterCtx {
-  stage: 'DiscardCharacter'
+  stage: 'DiscardCharacter';
   character: CharacterCard;
 }
 
 export interface KeepCharacterCtx {
-  stage: 'KeepCharacter'
+  stage: 'KeepCharacter';
   character: CharacterCard;
 }
 
@@ -172,7 +171,12 @@ export interface PlaceModifierCtx {
   stage: 'PlaceModifier';
 }
 
-export type ActionCtx = DiscardCharacterCtx | KeepCharacterCtx | PlaceRobotCtx | KeepTechCtx | PlaceModifierCtx;
+export type ActionCtx =
+  | DiscardCharacterCtx
+  | KeepCharacterCtx
+  | PlaceRobotCtx
+  | KeepTechCtx
+  | PlaceModifierCtx;
 
 export interface GalileoProjectGameState {
   secret: {
@@ -213,18 +217,18 @@ export type GalileoProjectMoveCtx = GalileoProjectFnCtx & {
 
 export type EventsAPI = GalileoProjectFnCtx['events'];
 export interface RandomAPI {
-    D4(): number;
-    D4(diceCount: number): number[];
-    D6(): number;
-    D6(diceCount: number): number[];
-    D10(): number;
-    D10(diceCount: number): number[];
-    D12(): number;
-    D12(diceCount: number): number[];
-    D20(): number;
-    D20(diceCount: number): number[];
-    Die(spotvalue?: number): number;
-    Die(spotvalue: number, diceCount: number): number[];
-    Number(): number;
-    Shuffle<T>(deck: T[]): T[];
+  D4(): number;
+  D4(diceCount: number): number[];
+  D6(): number;
+  D6(diceCount: number): number[];
+  D10(): number;
+  D10(diceCount: number): number[];
+  D12(): number;
+  D12(diceCount: number): number[];
+  D20(): number;
+  D20(diceCount: number): number[];
+  Die(spotvalue?: number): number;
+  Die(spotvalue: number, diceCount: number): number[];
+  Number(): number;
+  Shuffle<T>(deck: T[]): T[];
 }

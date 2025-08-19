@@ -1,11 +1,29 @@
-import { INVALID_MOVE } from "boardgame.io/dist/types/packages/core";
-import { gainEnergy, gainCredits, gainInfluence, processMoonResult } from "./game-utils";
-import { applyHunterPerksBonuses, increaseTwoRobots, incrementLevel, lowerThenIncreaseRobots, moveRobotThenIncrease } from "./levels";
-import { GalileoProjectMoveCtx, RobotType, Moon } from "./model";
-import { RobotSelection, roboticProjectComplete, acquireCompletedProject, assignTypeToRobot, assignMoonToRobot, buyEnergyThenMove } from "./robot";
-import { resolveRobotStage, nextStage } from "./game";
+import { INVALID_MOVE } from 'boardgame.io/dist/types/packages/core';
 
-export const ImmediateMsChau = (moveCtx: GalileoProjectMoveCtx, robot1: RobotSelection | null, robot2: RobotSelection | null) => {
+import { nextStage, resolveRobotStage } from './game';
+import { gainCredits, gainEnergy, gainInfluence, processMoonResult } from './game-utils';
+import {
+  applyHunterPerksBonuses,
+  increaseTwoRobots,
+  incrementLevel,
+  lowerThenIncreaseRobots,
+  moveRobotThenIncrease,
+} from './levels';
+import { GalileoProjectMoveCtx, Moon, RobotType } from './model';
+import {
+  acquireCompletedProject,
+  assignMoonToRobot,
+  assignTypeToRobot,
+  buyEnergyThenMove,
+  roboticProjectComplete,
+  RobotSelection,
+} from './robot';
+
+export const ImmediateMsChau = (
+  moveCtx: GalileoProjectMoveCtx,
+  robot1: RobotSelection | null,
+  robot2: RobotSelection | null,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
   const result = increaseTwoRobots(G, player, robot1, robot2);
@@ -16,8 +34,11 @@ export const ImmediateMsChau = (moveCtx: GalileoProjectMoveCtx, robot1: RobotSel
   events.setStage(nextStage(G));
 };
 
-export const ImmediateMnDiatExpi = (moveCtx: GalileoProjectMoveCtx, robot: RobotSelection | null) => {
-  const { G,  playerID, events } = moveCtx;
+export const ImmediateMnDiatExpi = (
+  moveCtx: GalileoProjectMoveCtx,
+  robot: RobotSelection | null,
+) => {
+  const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
   const result = incrementLevel(G, player, robot, 1);
   if (!result) {
@@ -40,7 +61,11 @@ export const GAIN_MEGACREDIT = 0;
 export const GAIN_INFLUENCE = 1;
 export const INCREASE_LEVEL = 2;
 export type HunterBonus = 0 | 1 | 2;
-export const ImmediateMnHunterPerks = (moveCtx: GalileoProjectMoveCtx, bonuses: HunterBonus[], robotSelection?: RobotSelection|null) => {
+export const ImmediateMnHunterPerks = (
+  moveCtx: GalileoProjectMoveCtx,
+  bonuses: HunterBonus[],
+  robotSelection?: RobotSelection | null,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
@@ -70,16 +95,20 @@ export const ImmediateTarakFreeman = (moveCtx: GalileoProjectMoveCtx) => {
   events.setStage(nextStage(G));
 };
 
-export const ImmediateNoor = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null, moon: Moon) => {
+export const ImmediateNoor = (
+  moveCtx: GalileoProjectMoveCtx,
+  robotSelection: RobotSelection | null,
+  moon: Moon,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
- 
+
   const result = assignMoonToRobot(G, player, robotSelection, moon);
   if (!result) {
     return INVALID_MOVE;
   }
   processMoonResult(G, player, result);
-  
+
   let next: string;
   if (player.roboticProject && roboticProjectComplete(player.roboticProject)) {
     acquireCompletedProject(G, player);
@@ -88,9 +117,14 @@ export const ImmediateNoor = (moveCtx: GalileoProjectMoveCtx, robotSelection: Ro
     next = nextStage(G);
   }
   events.setStage(next);
-}
+};
 
-export const ImmediateMnIlaZoe = (moveCtx: GalileoProjectMoveCtx, robot1: RobotSelection | null, robot2: RobotSelection | null, level: number) => {
+export const ImmediateMnIlaZoe = (
+  moveCtx: GalileoProjectMoveCtx,
+  robot1: RobotSelection | null,
+  robot2: RobotSelection | null,
+  level: number,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
   const result = lowerThenIncreaseRobots(G, player, robot1, robot2, level);
@@ -101,7 +135,11 @@ export const ImmediateMnIlaZoe = (moveCtx: GalileoProjectMoveCtx, robot1: RobotS
   events.setStage(nextStage(G));
 };
 
-export const ImmediateMartySimon = (moveCtx: GalileoProjectMoveCtx, type: RobotType, robotSelection: RobotSelection | null) => {
+export const ImmediateMartySimon = (
+  moveCtx: GalileoProjectMoveCtx,
+  type: RobotType,
+  robotSelection: RobotSelection | null,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
@@ -122,7 +160,7 @@ export const ImmediateMartySimon = (moveCtx: GalileoProjectMoveCtx, type: RobotT
 export const ImmediateMsLee = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
-  if (!gainInfluence(G, player, 3) ) {
+  if (!gainInfluence(G, player, 3)) {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
@@ -140,7 +178,10 @@ export const ImmediateNakkia = (moveCtx: GalileoProjectMoveCtx, robotSelection: 
   events.setStage(nextStage(G));
 };
 
-export const ImmediateMnLeonardSimon = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection) => {
+export const ImmediateMnLeonardSimon = (
+  moveCtx: GalileoProjectMoveCtx,
+  robotSelection: RobotSelection,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
   const result = buyEnergyThenMove(G, player, robotSelection);

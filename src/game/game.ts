@@ -1,16 +1,62 @@
 import { Game } from 'boardgame.io';
-
-import { SelectResourcesPhase } from './init-resources';
-import { PlaceRobotCtx, CharacterAbility, CharacterCard, GalileoProjectGameState, GalileoProjectMoveCtx, Moon, Track, DiscardCharacterCtx, KeepCharacterCtx, KeepTechCtx, RobotType } from './model';
-import { setupGame } from './setup';
 import { INVALID_MOVE } from 'boardgame.io/dist/types/packages/core';
-import { processMoonResult, switchTrack } from './game-utils';
-import { discardCharacter, hireCharacter, keepCharacter } from './character';
-import { developTech, keepTech, resolveAutomatedAssembly, resolveMemoryScanner, resolveRoboticSequencingChoose, resolveRoboticSequencingPick4, resolveSuperconductivity, TechDiscount } from './technology';
-import { acquireRobot, deployRobotToMoon, RobotSelection } from './robot';import { peek } from './utils';
-import { resolveBuilderAbility, resolveMinerAbility, resolveStarZA1, resolveStarZA2, resolveStarZA3, resolveStarZA4, resolveStarZA5, resolveStarZB1, resolveStarZB3, resolveStarZB5, resolveTechnicianAbility } from './robot-ability';
-import { ImmediateMartySimon, ImmediateMnDiatExpi, ImmediateMnEliotBan, ImmediateMnHunterPerks, ImmediateMnIlaZoe, ImmediateMnLeonardSimon, ImmediateMnMilutinMadic, ImmediateMsChau, ImmediateMsLee, ImmediateNakkia, ImmediateNoor, ImmediateTarakFreeman } from './immediate-hire-resolve';
 
+import { discardCharacter, hireCharacter, keepCharacter } from './character';
+import { processMoonResult, switchTrack } from './game-utils';
+import {
+  ImmediateMartySimon,
+  ImmediateMnDiatExpi,
+  ImmediateMnEliotBan,
+  ImmediateMnHunterPerks,
+  ImmediateMnIlaZoe,
+  ImmediateMnLeonardSimon,
+  ImmediateMnMilutinMadic,
+  ImmediateMsChau,
+  ImmediateMsLee,
+  ImmediateNakkia,
+  ImmediateNoor,
+  ImmediateTarakFreeman,
+} from './immediate-hire-resolve';
+import { SelectResourcesPhase } from './init-resources';
+import {
+  CharacterAbility,
+  CharacterCard,
+  DiscardCharacterCtx,
+  GalileoProjectGameState,
+  GalileoProjectMoveCtx,
+  KeepCharacterCtx,
+  KeepTechCtx,
+  Moon,
+  PlaceRobotCtx,
+  RobotType,
+  Track,
+} from './model';
+import { acquireRobot, deployRobotToMoon, RobotSelection } from './robot';
+import {
+  resolveBuilderAbility,
+  resolveMinerAbility,
+  resolveStarZA1,
+  resolveStarZA2,
+  resolveStarZA3,
+  resolveStarZA4,
+  resolveStarZA5,
+  resolveStarZB1,
+  resolveStarZB3,
+  resolveStarZB5,
+  resolveTechnicianAbility,
+} from './robot-ability';
+import { setupGame } from './setup';
+import {
+  developTech,
+  keepTech,
+  resolveAutomatedAssembly,
+  resolveMemoryScanner,
+  resolveRoboticSequencingChoose,
+  resolveRoboticSequencingPick4,
+  resolveSuperconductivity,
+  TechDiscount,
+} from './technology';
+import { peek } from './utils';
 
 const SwitchTrack = (moveCtx: GalileoProjectMoveCtx, move: boolean) => {
   const { G, playerID, events } = moveCtx;
@@ -24,7 +70,12 @@ const SwitchTrack = (moveCtx: GalileoProjectMoveCtx, move: boolean) => {
   events.endStage();
 };
 
-const HireCharacter = (moveCtx: GalileoProjectMoveCtx, index: number, ability: CharacterAbility, track: Track) => {
+const HireCharacter = (
+  moveCtx: GalileoProjectMoveCtx,
+  index: number,
+  ability: CharacterAbility,
+  track: Track,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
@@ -32,10 +83,10 @@ const HireCharacter = (moveCtx: GalileoProjectMoveCtx, index: number, ability: C
     return INVALID_MOVE;
   }
 
-  const next = ability === 'Immediate' || ability === 'Both' ? immediateAbilityStage(G) : nextStage(G);
+  const next =
+    ability === 'Immediate' || ability === 'Both' ? immediateAbilityStage(G) : nextStage(G);
   events.setStage(next);
 };
-
 
 const KeepCharacter = (moveCtx: GalileoProjectMoveCtx, characterToFire?: CharacterCard) => {
   const { G, playerID, events } = moveCtx;
@@ -58,15 +109,18 @@ const DiscardCharacter = (moveCtx: GalileoProjectMoveCtx) => {
   events.setStage(nextStage(G));
 };
 
-
-const DevelopTechnology = (moveCtx: GalileoProjectMoveCtx, index: number, discount?: TechDiscount) => {
+const DevelopTechnology = (
+  moveCtx: GalileoProjectMoveCtx,
+  index: number,
+  discount?: TechDiscount,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
   if (!developTech(G, player, index, discount)) {
     return INVALID_MOVE;
   }
-  
+
   events.setStage(resolveTechStage(G));
 };
 
@@ -81,19 +135,25 @@ const KeepTech = (moveCtx: GalileoProjectMoveCtx) => {
   events.setStage(nextStage(G));
 };
 
-
-const AcquireRobot = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection, lowerCost: boolean) => {
+const AcquireRobot = (
+  moveCtx: GalileoProjectMoveCtx,
+  robotSelection: RobotSelection,
+  lowerCost: boolean,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
   if (!acquireRobot(G, player, robotSelection.index, robotSelection.moon, lowerCost)) {
     return INVALID_MOVE;
   }
-  
+
   events.setStage(resolveRobotStage(G));
 };
 
-const ResolveSuperconductivity = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null) => {
+const ResolveSuperconductivity = (
+  moveCtx: GalileoProjectMoveCtx,
+  robotSelection: RobotSelection | null,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
 
@@ -102,11 +162,11 @@ const ResolveSuperconductivity = (moveCtx: GalileoProjectMoveCtx, robotSelection
     return INVALID_MOVE;
   }
   processMoonResult(G, player, result);
-  
+
   events.setStage(nextStage(G));
 };
 
-const RoboticSequencingPick4 =  (moveCtx: GalileoProjectMoveCtx) => {
+const RoboticSequencingPick4 = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID } = moveCtx;
   const player = G.players[playerID];
   resolveRoboticSequencingPick4(G, player);
@@ -119,14 +179,18 @@ const RoboticSequencingChoose = (moveCtx: GalileoProjectMoveCtx, index: number) 
   if (!resolveRoboticSequencingChoose(G, player, index)) {
     return INVALID_MOVE;
   }
- 
+
   events.setStage(resolveRobotStage(G));
 };
 
-const ResolveAutomatedAssembly = (moveCtx: GalileoProjectMoveCtx, modifier?: RobotType, moon?: Moon) => {
+const ResolveAutomatedAssembly = (
+  moveCtx: GalileoProjectMoveCtx,
+  modifier?: RobotType,
+  moon?: Moon,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
- 
+
   if (!resolveAutomatedAssembly(G, player, modifier, moon)) {
     return INVALID_MOVE;
   }
@@ -143,46 +207,53 @@ const ResolveAutomatedAssembly = (moveCtx: GalileoProjectMoveCtx, modifier?: Rob
 const ResolveMemoryScanner = (moveCtx: GalileoProjectMoveCtx, index: number) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
- 
+
   if (!resolveMemoryScanner(G, player, index)) {
     return INVALID_MOVE;
   }
 
   events.setStage(immediateAbilityStage(G));
-}
+};
 
-const ResolveBuilder = (moveCtx: GalileoProjectMoveCtx, index: number, ability: CharacterAbility) => {
+const ResolveBuilder = (
+  moveCtx: GalileoProjectMoveCtx,
+  index: number,
+  ability: CharacterAbility,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
- 
+
   if (!resolveBuilderAbility(G, player, index, ability)) {
     return INVALID_MOVE;
   }
   const next = ability === 'Immediate' ? immediateAbilityStage(G) : nextStage(G);
   events.setStage(next);
-}
+};
 
 const ResolveMiner = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
- 
+
   if (!resolveMinerAbility(G, player)) {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
-const ResolveTechnician = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null) => {
+const ResolveTechnician = (
+  moveCtx: GalileoProjectMoveCtx,
+  robotSelection: RobotSelection | null,
+) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
- 
+
   const result = resolveTechnicianAbility(G, player, robotSelection);
   if (!result) {
     return INVALID_MOVE;
   }
   processMoonResult(G, player, result);
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZA1 = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
@@ -191,17 +262,17 @@ const ResolveStarZA1 = (moveCtx: GalileoProjectMoveCtx) => {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZA2 = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
-  const player = G.players[playerID];  
-  
+  const player = G.players[playerID];
+
   if (!resolveStarZA2(G, player)) {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZA3 = (moveCtx: GalileoProjectMoveCtx, ability: CharacterAbility) => {
   const { G, playerID, events } = moveCtx;
@@ -212,17 +283,17 @@ const ResolveStarZA3 = (moveCtx: GalileoProjectMoveCtx, ability: CharacterAbilit
   }
   const next = ability === 'Immediate' ? immediateAbilityStage(G) : nextStage(G);
   events.setStage(next);
-}
+};
 
 const ResolveStarZA4 = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
-  const player = G.players[playerID]; 
-  
+  const player = G.players[playerID];
+
   if (!resolveStarZA4(G, player)) {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZA5 = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null) => {
   const { G, playerID, events } = moveCtx;
@@ -234,7 +305,7 @@ const ResolveStarZA5 = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSel
   }
   processMoonResult(G, player, result);
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZB1 = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
@@ -243,7 +314,7 @@ const ResolveStarZB1 = (moveCtx: GalileoProjectMoveCtx) => {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZB2 = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSelection | null) => {
   const { G, playerID, events } = moveCtx;
@@ -255,7 +326,7 @@ const ResolveStarZB2 = (moveCtx: GalileoProjectMoveCtx, robotSelection: RobotSel
   }
   processMoonResult(G, player, result);
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZB3 = (moveCtx: GalileoProjectMoveCtx) => {
   const { G, playerID, events } = moveCtx;
@@ -264,7 +335,7 @@ const ResolveStarZB3 = (moveCtx: GalileoProjectMoveCtx) => {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
 const ResolveStarZB4 = (moveCtx: GalileoProjectMoveCtx, index: number, discount: TechDiscount) => {
   const { G, playerID, events } = moveCtx;
@@ -273,7 +344,7 @@ const ResolveStarZB4 = (moveCtx: GalileoProjectMoveCtx, index: number, discount:
   if (!developTech(G, player, index, discount)) {
     return INVALID_MOVE;
   }
-  
+
   events.setStage(resolveTechStage(G));
 };
 
@@ -284,7 +355,7 @@ const ResolveStarZB5 = (moveCtx: GalileoProjectMoveCtx, index: number) => {
     return INVALID_MOVE;
   }
   events.setStage(nextStage(G));
-}
+};
 
 const PlaceRobot = (moveCtx: GalileoProjectMoveCtx, moon: Moon) => {
   const { G, playerID, events } = moveCtx;
@@ -294,10 +365,10 @@ const PlaceRobot = (moveCtx: GalileoProjectMoveCtx, moon: Moon) => {
   if (!result) {
     return INVALID_MOVE;
   }
-  
+
   processMoonResult(G, player, result);
   events.setStage(nextStage(G));
-}
+};
 
 export function nextStage(G: GalileoProjectGameState): string {
   const action = peek(G.actionCtx);
@@ -312,7 +383,7 @@ export function nextStage(G: GalileoProjectGameState): string {
 export function resolveRobotStage(G: GalileoProjectGameState): string {
   const action = peek(G.actionCtx) as PlaceRobotCtx;
   const robotType = action.robotToPlace.type;
-  return "Resolve" + robotType;
+  return 'Resolve' + robotType;
 }
 
 export function immediateAbilityStage(G: GalileoProjectGameState): string {
@@ -324,8 +395,9 @@ export function immediateAbilityStage(G: GalileoProjectGameState): string {
 export function resolveTechStage(G: GalileoProjectGameState): string {
   const action = peek(G.actionCtx) as KeepTechCtx;
   const techId = action.techToKeep.techId;
-  return techId === 'AutomatedDrilling' || techId === 'EarthMarsHighway' || techId === 'AiClone' ? 
-    'KeepTech' : 'Resolve' + techId;
+  return techId === 'AutomatedDrilling' || techId === 'EarthMarsHighway' || techId === 'AiClone'
+    ? 'KeepTech'
+    : 'Resolve' + techId;
 }
 
 export const GalileoProjectGame: Game<GalileoProjectGameState> = {
@@ -339,33 +411,45 @@ export const GalileoProjectGame: Game<GalileoProjectGameState> = {
 
   turn: {
     onBegin: ({ events }) => events.setStage('InfluenceSwitch'),
-    
+
     stages: {
-      InfluenceSwitch : {
+      InfluenceSwitch: {
         moves: {
-          SwitchTrack
+          SwitchTrack,
         },
-        next: 'ChooseAction'
+        next: 'ChooseAction',
       },
 
       ChooseAction: {
         moves: {
           HireCharacter,
           AcquireRobot,
-          DevelopTechnology
-        }
+          DevelopTechnology,
+        },
       },
       KeepTech: { moves: { KeepTech } },
       ResolveSuperconductivity: { moves: { ResolveSuperconductivity } },
       ResolveAutomatedAssembly: { moves: { ResolveAutomatedAssembly } },
       ResolveRoboticSequencing: { moves: { RoboticSequencingPick4, RoboticSequencingChoose } },
       ResolveMemoryScanner: { moves: { ResolveMemoryScanner } },
-      
+
       ResolveBuilder: { moves: { ResolveBuilder } },
       ResolveMiner: { moves: { ResolveMiner } },
       ResolveTechnician: { moves: { ResolveTechnician } },
-      ResolveStarZ: { moves: { ResolveStarZA1, ResolveStarZA2, ResolveStarZA3, ResolveStarZA4, ResolveStarZA5,
-        ResolveStarZB1, ResolveStarZB2, ResolveStarZB3, ResolveStarZB4, ResolveStarZB5 } },
+      ResolveStarZ: {
+        moves: {
+          ResolveStarZA1,
+          ResolveStarZA2,
+          ResolveStarZA3,
+          ResolveStarZA4,
+          ResolveStarZA5,
+          ResolveStarZB1,
+          ResolveStarZB2,
+          ResolveStarZB3,
+          ResolveStarZB4,
+          ResolveStarZB5,
+        },
+      },
       PlaceRobot: { moves: { PlaceRobot } },
 
       KeepCharacter: { moves: { KeepCharacter } },
@@ -374,18 +458,17 @@ export const GalileoProjectGame: Game<GalileoProjectGameState> = {
       ImmediateMartySimon: { moves: { ImmediateMartySimon } },
       ImmediateMnDiatExpi: { moves: { ImmediateMnDiatExpi } },
       ImmediateMnEliotBan: { moves: { ImmediateMnEliotBan } },
-      ImmediateMnHunterPerks: { moves: { ImmediateMnHunterPerks} },
+      ImmediateMnHunterPerks: { moves: { ImmediateMnHunterPerks } },
       ImmediateMnIlaZoe: { moves: { ImmediateMnIlaZoe } },
       ImmediateMnLeonardSimon: { moves: { ImmediateMnLeonardSimon } },
-      ImmediateMnMilutinMadic: { moves: { ImmediateMnMilutinMadic } }, 
+      ImmediateMnMilutinMadic: { moves: { ImmediateMnMilutinMadic } },
       ImmediateMsChau: { moves: { ImmediateMsChau } },
       ImmediateMsLee: { moves: { ImmediateMsLee } },
-      ImmediateNakkia: { moves: { ImmediateNakkia } }, 
+      ImmediateNakkia: { moves: { ImmediateNakkia } },
       ImmediateNoor: { moves: { ImmediateNoor } },
       ImmediateTarakFreeman: { moves: { ImmediateTarakFreeman } },
-    }
+    },
   },
 
   endIf: ({ _G, _ctx }) => {},
 };
-

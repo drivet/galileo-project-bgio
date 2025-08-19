@@ -1,16 +1,27 @@
+import { gainCredits, gainInfluence, moonLevel, otherTrack } from './game-utils';
+import {
+  CharacterAbility,
+  CharacterCard,
+  DiscardCharacterCtx,
+  GalileoProjectGameState,
+  KeepCharacterCtx,
+  Player,
+  Track,
+} from './model';
+import { peek } from './utils';
 
-import { gainInfluence, gainCredits, moonLevel, otherTrack } from "./game-utils";
-import { CharacterAbility, CharacterCard, DiscardCharacterCtx, GalileoProjectGameState, KeepCharacterCtx, Player, Track } from "./model";
-import { peek } from "./utils";
-
-export function pushCharacterCtx(G: GalileoProjectGameState, ability: CharacterAbility, card: CharacterCard) {
+export function pushCharacterCtx(
+  G: GalileoProjectGameState,
+  ability: CharacterAbility,
+  card: CharacterCard,
+) {
   if (ability === 'Immediate') {
     G.actionCtx.push({
       stage: 'DiscardCharacter',
       character: card,
     });
   } else {
-     G.actionCtx.push({
+    G.actionCtx.push({
       stage: 'KeepCharacter',
       character: card,
     });
@@ -19,15 +30,21 @@ export function pushCharacterCtx(G: GalileoProjectGameState, ability: CharacterA
 
 /**
  * One of the basic actions of the game
- * 
- * @param G 
- * @param player 
- * @param index 
+ *
+ * @param G
+ * @param player
+ * @param index
  * @param ability This is only a choice on certain Ganeymede spaces, otherwise it's determined by your track, or it's always both
  * @param track This is only a choice if you're on the 0 space.
- * @returns 
+ * @returns
  */
-export function hireCharacter(G: GalileoProjectGameState, player: Player, index: number, ability: CharacterAbility, track: Track): boolean {
+export function hireCharacter(
+  G: GalileoProjectGameState,
+  player: Player,
+  index: number,
+  ability: CharacterAbility,
+  track: Track,
+): boolean {
   const card = G.charactersForHire[index];
   if (!card) {
     return false;
@@ -49,22 +66,25 @@ export function hireCharacter(G: GalileoProjectGameState, player: Player, index:
   return true;
 }
 
-
 /**
  * The bottom action of each hire.
- * 
- * @param G 
- * @param player 
- * @param character 
- * @param characterToFire 
- * @returns 
+ *
+ * @param G
+ * @param player
+ * @param character
+ * @param characterToFire
+ * @returns
  */
-export function keepCharacter(G: GalileoProjectGameState, player: Player, characterToFire?: CharacterCard): boolean {
+export function keepCharacter(
+  G: GalileoProjectGameState,
+  player: Player,
+  characterToFire?: CharacterCard,
+): boolean {
   const action = peek(G.actionCtx);
   if (!action || action.stage !== 'KeepCharacter') {
     return false;
   }
-  
+
   if (player.characters.length === maxCharacters(player)) {
     if (!characterToFire) {
       return false;
@@ -77,7 +97,7 @@ export function keepCharacter(G: GalileoProjectGameState, player: Player, charac
     G.discardedCharacters.unshift(characterToFire);
   }
   const character = (G.actionCtx.pop() as KeepCharacterCtx).character;
-  player.characters.push(character); 
+  player.characters.push(character);
   return true;
 }
 
@@ -103,13 +123,18 @@ function adjustCharacterInfluence(card: CharacterCard, index: number): number {
   }
 }
 
-function validateHire(player: Player, card: CharacterCard, ability: CharacterAbility, track: Track): boolean {
+function validateHire(
+  player: Player,
+  card: CharacterCard,
+  ability: CharacterAbility,
+  track: Track,
+): boolean {
   if (player.influence > 0 && player.track !== track) {
     // track has to match, but only if you actually have influence
     return false;
   }
-  
-  const ganymedeLevel = moonLevel(player, "Ganymede");
+
+  const ganymedeLevel = moonLevel(player, 'Ganymede');
   if (ganymedeLevel < 4) {
     // at this level, the ability must match your track, and you can't do both
     if (ability === 'Both') {
@@ -131,8 +156,8 @@ function validateHire(player: Player, card: CharacterCard, ability: CharacterAbi
 }
 
 function maxCharacters(player: Player): number {
-  const ganymedeLevel = moonLevel(player, "Ganymede");
-  const techBonus = player.technologies.map(t => t.techId).includes('MemoryScanner') ? 1 : 0;
+  const ganymedeLevel = moonLevel(player, 'Ganymede');
+  const techBonus = player.technologies.map((t) => t.techId).includes('MemoryScanner') ? 1 : 0;
   if (ganymedeLevel === 0) {
     return 2 + techBonus;
   } else if (ganymedeLevel <= 7) {

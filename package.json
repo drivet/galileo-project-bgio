@@ -6,6 +6,7 @@
     "start": "parcel index.html --open",
     "build": "parcel build index.html",
     "serve": "npx ts-node src/server.ts",
+    "lint-fix": "npx eslint --fix",
     "test": "jest"
   },
   "dependencies": {
