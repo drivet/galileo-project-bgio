@@ -1,4 +1,4 @@
-import { INVALID_MOVE } from 'boardgame.io/dist/types/packages/core';
+import { INVALID_MOVE } from 'boardgame.io/core';
 
 import { nextStage, resolveRobotStage } from './game';
 import { gainCredits, gainEnergy, gainInfluence, processMoonResult } from './game-utils';

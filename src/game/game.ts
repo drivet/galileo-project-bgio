@@ -1,5 +1,4 @@
 import { Game } from 'boardgame.io';
-import { INVALID_MOVE } from 'boardgame.io/dist/types/packages/core';
 
 import { discardCharacter, hireCharacter, keepCharacter } from './character';
 import { processMoonResult, switchTrack } from './game-utils';
@@ -31,7 +30,7 @@ import {
   RobotType,
   Track,
 } from './model';
-import { acquireRobot, deployRobotToMoon, RobotSelection } from './robot';
+import { acquireCompletedProject, acquireRobot, assignMoonToRobot, assignTypeToRobot, deployRobotToMoon, roboticProjectComplete, RobotSelection } from './robot';
 import {
   resolveBuilderAbility,
   resolveMinerAbility,
@@ -57,6 +56,7 @@ import {
   TechDiscount,
 } from './technology';
 import { peek } from './utils';
+import { INVALID_MOVE } from 'boardgame.io/core';
 
 const SwitchTrack = (moveCtx: GalileoProjectMoveCtx, move: boolean) => {
   const { G, playerID, events } = moveCtx;
@@ -370,6 +370,64 @@ const PlaceRobot = (moveCtx: GalileoProjectMoveCtx, moon: Moon) => {
   events.setStage(nextStage(G));
 };
 
+const PlaceMoon = (
+  moveCtx: GalileoProjectMoveCtx,
+  robotSelection: RobotSelection|null,
+  moon: Moon
+) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+
+  const action = peek(G.actionCtx);
+  if (!action || action.stage !== 'PlaceModifier') {
+    return INVALID_MOVE;
+  }
+  G.actionCtx.pop();
+
+  const result = assignMoonToRobot(G, player, robotSelection, moon);
+  if (!result) {
+    return INVALID_MOVE;
+  }
+  processMoonResult(G, player, result);
+
+  let next: string;
+  if (player.roboticProject && roboticProjectComplete(player.roboticProject)) {
+    acquireCompletedProject(G, player);
+    next = resolveRobotStage(G);
+  } else {
+    next = nextStage(G);
+  }
+  events.setStage(next);
+};
+
+const PlaceType = (
+  moveCtx: GalileoProjectMoveCtx,
+  type: RobotType,
+  robotSelection: RobotSelection | null,
+) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+
+  const action = peek(G.actionCtx);
+  if (!action || action.stage !== 'PlaceModifier') {
+    return INVALID_MOVE;
+  }
+  G.actionCtx.pop();
+
+  if (!assignTypeToRobot(G, player, type, robotSelection)) {
+    return INVALID_MOVE;
+  }
+
+  let next: string;
+  if (player.roboticProject && roboticProjectComplete(player.roboticProject)) {
+    acquireCompletedProject(G, player);
+    next = resolveRobotStage(G);
+  } else {
+    next = nextStage(G);
+  }
+  events.setStage(next);
+};
+
 export function nextStage(G: GalileoProjectGameState): string {
   const action = peek(G.actionCtx);
   if (!action) {
@@ -401,7 +459,7 @@ export function resolveTechStage(G: GalileoProjectGameState): string {
 }
 
 export const GalileoProjectGame: Game<GalileoProjectGameState> = {
-  name: 'Galileo Project',
+  name: 'GalileoProject',
 
   setup: ({ ctx, random }) => setupGame(ctx.playOrder, random),
 
@@ -467,6 +525,8 @@ export const GalileoProjectGame: Game<GalileoProjectGameState> = {
       ImmediateNakkia: { moves: { ImmediateNakkia } },
       ImmediateNoor: { moves: { ImmediateNoor } },
       ImmediateTarakFreeman: { moves: { ImmediateTarakFreeman } },
+
+      PlaceModifier: { moves: { PlaceMoon, PlaceType } },
     },
   },
 
