@@ -468,7 +468,9 @@ export const GalileoProjectGame: Game<GalileoProjectGameState> = {
   },
 
   turn: {
-    onBegin: ({ events }) => events.setStage('InfluenceSwitch'),
+    onBegin: ({ events }) => {
+      events.setActivePlayers({currentPlayer: 'InfluenceSwitch'});
+    },
 
     stages: {
       InfluenceSwitch: {

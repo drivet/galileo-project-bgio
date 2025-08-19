@@ -11,11 +11,6 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['resourceSelected']);
-
-function onClick(idx: number) {
-  console.log('click!!');
-  emit('resourceSelected', idx);
-}
 </script>
 <style scoped>
 .card-row {
@@ -28,7 +23,7 @@ function onClick(idx: number) {
 <template>
   <div class="card-row">
     <div v-for="(c, idx) in cards">
-      <vue-json-pretty @click="onClick(idx)" v-if="c !== null" 
+      <vue-json-pretty @click="$emit('resourceSelected', idx)" v-if="c !== null" 
         class="card character" 
         :data="c" />
       <div v-else class="card" ></div>
