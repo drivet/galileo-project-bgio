@@ -5,11 +5,14 @@ const props = defineProps<{
   card: RobotCard
 }>()
 </script>
-<style scoped>
-
+<style>
+.robot-card {
+  border: 1px solid;
+  border-radius: 10px;
+}
 </style>
 <template>
-  <div class="card robot-card">
+  <div class="robot-card">
     <div class="robot-card__cost">
       {{ card.baseCost }}
     </div> 

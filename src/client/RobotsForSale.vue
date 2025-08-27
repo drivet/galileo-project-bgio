@@ -6,17 +6,20 @@ const props = defineProps<{
   cards: (RobotCard | null)[]
 }>()
 </script>
-<style scoped>
-.card-row {
-  display: flex;
-  width: 1100px;
+<style>
+.robot-strip__card-wrap {
+  width: 20%;
+  padding: 5px;
 }
-
+.robot-card {
+  width: 100%;
+  height: 100%;
+}
 </style>
 <template>
-  <div class="card-row">
-    <div v-for="c in cards">
-      <RobotCardComp v-if="c" :card="c" />
+  <div class="robot-strip row">
+    <div class="robot-strip__card-wrap" v-for="c in cards">
+      <RobotCardComp class="robot-card" v-if="c" :card="c" />
       <div v-else class="card" ></div>
     </div>
   </div>

@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 import { TechnologySide } from '../game/model';
-import TechnologyTile from './TechnologyTile.vue'
 
 const props = defineProps<{
-  side: TechnologySide
+  side: TechnologySide | null
 }>()
 </script>
-<style scoped>
+<style>
+
+.tile {
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: smaller;
+  aspect-ratio: 3 / 2;
+}
 
 </style>
 <template>
-  <div class="tile">
+  <div v-if="side" class="tile">
     <div class="tile__type">
       {{ side.techId }}
     </div> 
@@ -23,5 +29,7 @@ const props = defineProps<{
     <div class="tile__vp">
       {{ side.vp }}
     </div>
+  </div>
+  <div v-else>
   </div>
 </template>

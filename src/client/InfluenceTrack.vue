@@ -5,11 +5,13 @@ const props = defineProps<{
    trackPositions: { player: string, track: Track|null, influence: number }[],
 }>()
 </script>
-<style scoped>
-
+<style>
+.influence-track {
+  margin: var(--gap);
+}
 </style>
 <template>
-  <div class="influenceTrack">
+  <div class="influence-track">
     <span v-for="t in trackPositions"> ({{ t.player }}, {{ t.influence }}, {{ t.track }} )</span>
   </div>
 </template>

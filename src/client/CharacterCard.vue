@@ -5,8 +5,11 @@ const props = defineProps<{
   card: CharacterCard
 }>()
 </script>
-<style scoped>
-
+<style>
+.character-card {
+  border: 1px solid;
+  border-radius: 10px;
+}
 </style>
 <template>
   <div class="card character-card">
