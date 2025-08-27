@@ -70,6 +70,16 @@ const SwitchTrack = (moveCtx: GalileoProjectMoveCtx, move: boolean) => {
   events.endStage();
 };
 
+const ChooseTrack = (moveCtx: GalileoProjectMoveCtx, track: Track) => {
+  const { G, playerID, events } = moveCtx;
+  const player = G.players[playerID];
+  if (player.track !== null || player.influence === 0) {
+    return INVALID_MOVE;
+  }
+  player.track = track;
+  events.endStage();
+};
+
 const HireCharacter = (
   moveCtx: GalileoProjectMoveCtx,
   index: number,
@@ -475,7 +485,7 @@ export const GalileoProjectGame: Game<GalileoProjectGameState> = {
     stages: {
       InfluenceSwitch: {
         moves: {
-          SwitchTrack,
+          SwitchTrack, ChooseTrack,
         },
         next: 'ChooseAction',
       },

@@ -1,0 +1,22 @@
+.card {
+  width: 150px;
+  height: 225px;
+  border: 1px solid;
+  border-radius: 10px;
+  margin-right: 10px;
+}
+
+.tile {
+  width: 150px;
+  height: 100px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: smaller;
+}
+
+.goal {
+  width: 150px;
+  height: 100px;
+  border: 1px solid;
+  font-size: smaller;
+}

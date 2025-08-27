@@ -1,31 +1,21 @@
 <script lang="ts" setup>
-import { PropType } from 'vue';
-import VueJsonPretty from 'vue-json-pretty';
-import 'vue-json-pretty/lib/styles.css';
 import { TechnologySide } from '../game/model';
+import TechnologyTile from './TechnologyTile.vue';
 
-const props = defineProps({
-  tech: {
-    type: Array as PropType<Array<Array<TechnologySide> | null>>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  tech: (TechnologySide[]|null)[]
+}>()
 </script>
 <style scoped>
 .tech-coloumn {
   display: flex;
   flex-direction: column;
 }
-.tech {
-  width: 270px;
-}
-
 </style>
 <template>
   <div class="tech-coloumn ">
     <div v-for="t in tech">
-      <vue-json-pretty v-if="t !== null" 
-        class="tech" :data="t[0]" />
+      <TechnologyTile v-if="t" :side="t[0]"></TechnologyTile>
       <div v-else class="tech" ></div>
     </div>
   </div>
