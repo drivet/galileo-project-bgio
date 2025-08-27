@@ -29,4 +29,5 @@ const emit = defineEmits(['resourceSelected']);
       <div v-else class="card" ></div>
     </div>
   </div>
+
 </template>

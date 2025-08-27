@@ -55,6 +55,9 @@ function points(goal: number, pos: number) {
 
 .goals__type {
   height: 50%;
+  border: 1px solid;
+  overflow: hidden;
+  border-radius: 5px;
 }
 .goals__players {
   height: 50%;

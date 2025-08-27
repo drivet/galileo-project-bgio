@@ -32,11 +32,10 @@ function selectInitialResource(idx: number) {
 </style>
 
 <template>
-  <h1>Galileo Project!</h1>
   <MainBoard v-if="stateRef?.G" :state="stateRef?.G" />
-  <!--
+  
   <InitialResources v-if="stateRef?.G.initialResources" @resourceSelected="(idx) => selectInitialResource(idx)"
-    :cards="stateRef?.G.initialResources"></InitialResources>
-  -->
+    :cards="stateRef?.G.initialResources"/>
+  
   <!-- <vue-json-pretty :data="stateRef?.G" /> -->
 </template>
