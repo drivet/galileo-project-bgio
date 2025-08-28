@@ -28,14 +28,17 @@ function selectInitialResource(idx: number) {
 }
 </script>
 
-<style scoped>
+<style>
+.initial-resources-wrap {
+  justify-content: center;
+}
 </style>
 
 <template>
   <MainBoard v-if="stateRef?.G" :state="stateRef?.G" />
-  
-  <InitialResources v-if="stateRef?.G.initialResources" @resourceSelected="(idx) => selectInitialResource(idx)"
-    :cards="stateRef?.G.initialResources"/>
-  
-  <!-- <vue-json-pretty :data="stateRef?.G" /> -->
+
+  <div v-if="stateRef?.G.initialResources" class="initial-resources-wrap row">
+    <InitialResources @resourceSelected="(idx) => selectInitialResource(idx)"
+      :cards="stateRef?.G.initialResources"/>
+  </div>
 </template>
