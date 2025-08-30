@@ -20,7 +20,7 @@ function trackPos(state: GalileoProjectGameState): TrackPos[] {
   return Object.values(state.players)
     .map(p => ({player: p.playerID, track: p.track, influence: p.influence}));
 }
-
+const emit = defineEmits(['trackSelected']);
 </script>
 
 <style>
@@ -104,11 +104,12 @@ function trackPos(state: GalileoProjectGameState): TrackPos[] {
    
     <div class="main-board__strip-track column">
       <div class="main-board__robot-strip-wrap">
-        <RobotsForSale class="main-board__robot-strip" :cards="state.robotsForSale"/>
+        <RobotsForSale class="main-board__robot-strip" :cards="state.robotsForSale" :pile="state.secret.robotDeck.length"/>
       </div>
 
       <div class="main-board__influence-track-wrap row">
         <InfluenceTrack class="main-board__influence-track"
+          @trackSelected="(track) => $emit('trackSelected', track)"
           :trackPositions="trackPos(state)"/>
       </div>
      

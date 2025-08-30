@@ -13,7 +13,7 @@ const props = defineProps<{
 function getPlayers(trackPositions: TrackPos[], influence: number, track: Track|null): string[] {
   return trackPositions.filter(t => t.influence === influence && t.track === track).map(t => t.player);
 }
-
+const emit = defineEmits(['trackSelected']);
 </script>
 <style>
 .influence-track__switch-reminder {
@@ -66,15 +66,19 @@ function getPlayers(trackPositions: TrackPos[], influence: number, track: Track|
     </div>
     <div class="influence-track__plus col" v-for="idx in 10">
       <div class="influence-track__earth-wrap">
-        <div class="influence-track__earth-pos">
+        <div class="influence-track__earth-pos" @click="$emit('trackSelected', 'Earth')">
           <div>{{ idx }}</div>
-          <span v-for="p in getPlayers(trackPositions, idx, 'Earth')">{{ p }}, </span>
+          <span v-for="p in getPlayers(trackPositions, idx, 'Earth')">
+            {{ p }}, 
+          </span>
         </div>
       </div>
       <div class="influence-track__mars-wrap">
-        <div class="influence-track__mars-pos">
+        <div class="influence-track__mars-pos" @click="$emit('trackSelected', 'Mars')">
           <div>{{ idx }}</div>
-          <span v-for="p in getPlayers(trackPositions, idx, 'Mars')">{{ p }}, </span>
+          <span v-for="p in getPlayers(trackPositions, idx, 'Mars')">
+            {{ p }},
+          </span>
         </div>
       </div>
     </div>

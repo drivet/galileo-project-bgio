@@ -3,7 +3,8 @@ import { RobotCard } from '../game/model';
 import RobotCardComp from './RobotCard.vue';
 
 const props = defineProps<{
-  cards: (RobotCard | null)[]
+  cards: (RobotCard | null)[];
+  pile: number;
 }>()
 </script>
 <style>
@@ -11,10 +12,12 @@ const props = defineProps<{
   width: 20%;
   padding: 5px;
 }
+
 .robot-card {
   width: 100%;
   height: 100%;
 }
+
 </style>
 <template>
   <div class="robot-strip row">
@@ -22,5 +25,6 @@ const props = defineProps<{
       <RobotCardComp class="robot-card" v-if="c" :card="c" />
       <div v-else class="card" ></div>
     </div>
+   
   </div>
 </template>

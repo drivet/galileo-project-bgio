@@ -70,12 +70,16 @@ const SwitchTrack = (moveCtx: GalileoProjectMoveCtx, move: boolean) => {
   events.endStage();
 };
 
-const ChooseTrack = (moveCtx: GalileoProjectMoveCtx, track: Track) => {
+const ChooseTrack = (moveCtx: GalileoProjectMoveCtx, track: Track | null) => {
   const { G, playerID, events } = moveCtx;
   const player = G.players[playerID];
-  if (player.track !== null || player.influence === 0) {
-    return INVALID_MOVE;
+
+  if (player.track !== null || 
+      (track && player.influence === 0) || 
+      (!track && player.influence > 0)) {
+      return INVALID_MOVE;
   }
+
   player.track = track;
   events.endStage();
 };
