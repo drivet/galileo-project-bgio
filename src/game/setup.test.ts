@@ -1,8 +1,7 @@
-import { RandomAPI } from "./model";
-import { setup } from "./setup";
+import { RandomAPI } from './model';
+import { setupGame } from './setup';
 
 class NotRandomAPI {
-
   Number(): number {
     return 1;
   }
@@ -12,6 +11,6 @@ class NotRandomAPI {
 }
 
 it('should show 5 robots for sale', () => {
-  const G = setup(["0", "1"], new NotRandomAPI() as RandomAPI);
+  const G = setupGame(['0', '1'], new NotRandomAPI() as RandomAPI);
   expect(G.robotsForSale.length).toBe(5);
 });

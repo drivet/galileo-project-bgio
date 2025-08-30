@@ -6,6 +6,7 @@
     "start": "parcel index.html --open",
     "build": "parcel build index.html",
     "serve": "npx ts-node src/server.ts",
+    "lint-fix": "npx eslint --fix",
     "test": "jest"
   },
   "dependencies": {
@@ -13,7 +14,8 @@
     "boardgame.io": "^0.50.2",
     "lodash": "^4.17.21",
     "ts-jest": "^29.3.2",
-    "vue": "^3.5.17"
+    "vue": "^3.5.17",
+    "vue-json-pretty": "^2.5.0"
   },
   "devDependencies": {
     "@parcel/transformer-vue": "^2.15.4",

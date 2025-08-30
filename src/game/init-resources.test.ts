@@ -39,7 +39,7 @@ function makePlayer(playerID: PlayerID): Player {
       Ganymede: [],
       Io: [],
     },
-    technologies: []
+    technologies: [],
   };
 }
 
@@ -74,10 +74,8 @@ it('should choose a resource', () => {
 });
 
 it('should end phase if one card left', () => {
- const G = {
-    initialResources: [
-      makeRoboticProjectCard(3, 1, 2, 2),
-    ] as RoboticProjectCard[],
+  const G = {
+    initialResources: [makeRoboticProjectCard(3, 1, 2, 2)] as RoboticProjectCard[],
   } as GalileoProjectGameState;
 
   const fnCtx = { G } as GalileoProjectFnCtx;
@@ -85,7 +83,7 @@ it('should end phase if one card left', () => {
 });
 
 it('should not end phase if more than one card left', () => {
- const G = {
+  const G = {
     initialResources: [
       makeRoboticProjectCard(3, 1, 2, 2),
       makeRoboticProjectCard(4, 2, 1, 1),
@@ -97,14 +95,10 @@ it('should not end phase if more than one card left', () => {
 });
 
 it('should end phase by putting card back', () => {
- const G = {
-    initialResources: [
-      makeRoboticProjectCard(3, 1, 2, 2),
-    ] as RoboticProjectCard[],
+  const G = {
+    initialResources: [makeRoboticProjectCard(3, 1, 2, 2)] as RoboticProjectCard[],
     secret: {
-      roboticProjectCards: [
-        makeRoboticProjectCard(4, 2, 1, 1)
-      ] as RoboticProjectCard[],
+      roboticProjectCards: [makeRoboticProjectCard(4, 2, 1, 1)] as RoboticProjectCard[],
     },
   } as GalileoProjectGameState;
 
@@ -116,10 +110,10 @@ it('should end phase by putting card back', () => {
 });
 
 it('should throw error if ending incorrectly (more than 1 card left)', () => {
- const G = {
+  const G = {
     initialResources: [
       makeRoboticProjectCard(3, 1, 2, 2),
-      makeRoboticProjectCard(4, 2, 1, 1)
+      makeRoboticProjectCard(4, 2, 1, 1),
     ] as RoboticProjectCard[],
   } as GalileoProjectGameState;
 
@@ -128,9 +122,8 @@ it('should throw error if ending incorrectly (more than 1 card left)', () => {
 });
 
 it('should throw error if ending incorrectly (no cards left)', () => {
- const G = {
-    initialResources: [
-    ] as RoboticProjectCard[],
+  const G = {
+    initialResources: [] as RoboticProjectCard[],
   } as GalileoProjectGameState;
 
   const fnCtx = { G } as GalileoProjectFnCtx;

@@ -1,5 +1,6 @@
-import _ from "lodash";
-import { GalileoProjectGameState, Moon, Player, RobotType, TechId } from "./model";
+import { MoonLevelResolution } from './levels';
+import { GalileoProjectGameState, Moon, Player, RobotType, TechId, Track } from './model';
+import { slideAndReplace } from './utils';
 
 export function switchTrack(G: GalileoProjectGameState, player: Player): boolean {
   if (player.megacredits === 0 || !player.track) {
@@ -9,7 +10,7 @@ export function switchTrack(G: GalileoProjectGameState, player: Player): boolean
   if (player.track === 'Earth') {
     player.track = 'Mars';
   } else {
-    player.track = 'Earth'
+    player.track = 'Earth';
   }
   player.megacredits--;
   G.megacredits++;
@@ -21,7 +22,11 @@ export function switchTrack(G: GalileoProjectGameState, player: Player): boolean
   return true;
 }
 
-export function gainCredits(G: GalileoProjectGameState, player: Player, megacredits: number): boolean {
+export function gainCredits(
+  G: GalileoProjectGameState,
+  player: Player,
+  megacredits: number,
+): boolean {
   if (megacredits <= 0) {
     return false;
   }
@@ -49,7 +54,11 @@ export function gainEnergy(G: GalileoProjectGameState, player: Player, energy: n
   return true;
 }
 
-export function gainInfluence(G: GalileoProjectGameState, player: Player, influence: number): boolean {
+export function gainInfluence(
+  G: GalileoProjectGameState,
+  player: Player,
+  influence: number,
+): boolean {
   if (influence < 0) {
     return false;
   }
@@ -58,7 +67,7 @@ export function gainInfluence(G: GalileoProjectGameState, player: Player, influe
     return true;
   }
 
-  if ((player.influence + influence) > 10) {
+  if (player.influence + influence > 10) {
     player.influence += Math.min(influence, 10 - player.influence);
     gainCredits(G, player, 1);
   } else {
@@ -67,10 +76,9 @@ export function gainInfluence(G: GalileoProjectGameState, player: Player, influe
   return true;
 }
 
-
 export function moonLevel(player: Player, moon: Moon): number {
   let level = 0;
-  player.moons[moon].forEach(c => level += c.level);
+  player.moons[moon].forEach((c) => (level += c.level));
   if (moon === 'Callisto') {
     return Math.min(level, 14);
   } else if (moon === 'Europa') {
@@ -94,13 +102,46 @@ export function payEnergy(G: GalileoProjectGameState, player: Player, give: numb
 }
 
 export function countRobots(player: Player, robotType: RobotType): number {
-  const ioCount = player.moons.Io.filter(r => r.type === robotType).length;
-  const europaCount = player.moons.Europa.filter(r => r.type === robotType).length;
-  const ganymedeCount = player.moons.Ganymede.filter(r => r.type === robotType).length;
-  const callistoCount = player.moons.Callisto.filter(r => r.type === robotType).length;
+  const ioCount = player.moons.Io.filter((r) => r.type === robotType).length;
+  const europaCount = player.moons.Europa.filter((r) => r.type === robotType).length;
+  const ganymedeCount = player.moons.Ganymede.filter((r) => r.type === robotType).length;
+  const callistoCount = player.moons.Callisto.filter((r) => r.type === robotType).length;
   return ioCount + europaCount + ganymedeCount + callistoCount;
 }
 
+export function slideAndReplaceCards(G: GalileoProjectGameState) {
+  slideAndReplace(G.charactersForHire, G.secret.characterDeck);
+  slideAndReplace(G.robotsForSale, G.secret.robotDeck);
+}
+
+export function otherTrack(track: Track): Track {
+  return track === 'Earth' ? 'Mars' : 'Earth';
+}
+
+export function processMoonResult(
+  G: GalileoProjectGameState,
+  player: Player,
+  moonResult: MoonLevelResolution[],
+) {
+  const nonEnergyResult = processEnergy(G, player, moonResult);
+  nonEnergyResult.forEach((r) => {
+    if (r === 'UpdateRoboticProject') {
+      G.actionCtx.push({ stage: 'PlaceModifier' });
+    }
+  });
+}
+
+function processEnergy(
+  G: GalileoProjectGameState,
+  player: Player,
+  moonResult: MoonLevelResolution[],
+): MoonLevelResolution[] {
+  const nonEnergyResult = moonResult.filter((r) => r !== 'GainEnergy');
+  const energyCount = moonResult.length - nonEnergyResult.length;
+  gainEnergy(G, player, energyCount);
+  return nonEnergyResult;
+}
+
 function playerHasTech(player: Player, tech: TechId): boolean {
-  return player.technologies.map(t => t.techId).includes(tech);
+  return player.technologies.map((t) => t.techId).includes(tech);
 }
